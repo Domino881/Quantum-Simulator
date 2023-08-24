@@ -3,7 +3,7 @@
 #include<vector>
 #include<iostream>
 #include<complex>
-#include"mymath.h"
+#include"CMatrix.h"
 using namespace std;
 using namespace complex_literals;
 

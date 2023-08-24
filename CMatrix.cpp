@@ -1,4 +1,4 @@
-#include"mymath.h"
+#include"CMatrix.h"
 #include<complex>
 #include<vector>
 #include<cassert>
@@ -89,7 +89,7 @@ CMatrix matmul(const CMatrix& a, const CMatrix& b){
     return res;
 }
 
-CMatrix CMatrix::operator+(const CMatrix& a){
+CMatrix CMatrix::operator+(const CMatrix& a) const{
     CMatrix r = *this;
     for(int i=0; i<r.dim(); i++){
         for(int j=0; j<r.dim(); j++){

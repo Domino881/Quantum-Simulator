@@ -13,6 +13,7 @@ class CMatrix{
         /*
         * @brief Constructs a complex square matrix, filled with zeros
         * @param dim dimension of the matrix
+        * @returns A zero matrix of dimension dim
         */
         CMatrix(int dim);
 
@@ -22,41 +23,44 @@ class CMatrix{
         void print();
 
         /*
-        * @brief Returns the dimension of the matrix
+        * @returns The dimension of the matrix
         */
         const int dim() const;
 
+    //--------------OPERATORS--------------
         complex<double>& operator()(int a, int b);
         const complex<double>& operator()(int a, int b) const;
 
-        /*
-        * @brief Returns true if matrix is unitary
-        * @param epsilon maximum allowed error from the identity
-        */
-        const bool isUnitary(double epsilon=1e-5) const;
+        CMatrix operator+(const CMatrix& a) const;
+        CMatrix operator-() const;
+        CMatrix operator-(const CMatrix& a) const{
+            return (*this)+(-a);
+        }
+
 
         /*
-        * @brief Returns the transpose of the matrix
+        * @returns The transpose of the matrix
         */
         CMatrix t() const;
 
         /*
-        * @brief Returns a matrix with entries conjugate to the original
+        * @returns A matrix with entries conjugate to the original
         */
         CMatrix compconj();
 
         /*
-        * @brief Returns the dagger of the matrix
+        * @returns The dagger of the matrix
         */
         CMatrix dagger() const{
             return (this->t()).compconj();
         };
 
-        CMatrix operator+(const CMatrix& a);
-        CMatrix operator-() const;
-        CMatrix operator-(const CMatrix& a){
-            return (*this)+(-a);
-        }
+        /*
+        * @returns true if matrix is unitary
+        * @param epsilon maximum allowed error from the identity
+        */
+        const bool isUnitary(double epsilon=1e-5) const;
+
 };
 
 /*
@@ -71,4 +75,9 @@ CMatrix diagMatrix(vector< complex<double> >& diagonal);
 */
 CMatrix diagMatrix(int dim);
 
+/*
+* @brief Performs matrix multiplication
+*  @param a,b matrices to be multiplicated
+* @returns The product of a and b
+*/
 CMatrix matmul(CMatrix& a, CMatrix& b);

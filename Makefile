@@ -14,11 +14,11 @@ all: main
 main: main.o mymath.o
 	$(CC) $(CFLAGS) -o main main.o mymath.o
 
-main.o: main.cpp mymath.h
+main.o: main.cpp CMatrix.h
 	$(CC) $(CFLAGS) -c main.cpp
 
-mymath.o: mymath.cpp mymath.h
-	$(CC) $(CFLAGS) -c mymath.cpp
+mymath.o: CMatrix.cpp CMatrix.h
+	$(CC) $(CFLAGS) -c CMatrix.cpp
 
 clean:
 	$(RM) main
