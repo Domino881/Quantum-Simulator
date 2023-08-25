@@ -11,14 +11,11 @@ CFLAGS  = -g -Wall
 
 all: main
 
-main: main.o mymath.o
-	$(CC) $(CFLAGS) -o main main.o mymath.o
+main: main.o CMatrix.o QuantumCircuit.o Operations.o
+	$(CC) $(CFLAGS) -o main main.o CMatrix.o QuantumCircuit.o Operations.o
 
-main.o: main.cpp CMatrix.h
-	$(CC) $(CFLAGS) -c main.cpp
+CMatrix.o: CMatrix.h
 
-mymath.o: CMatrix.cpp CMatrix.h
-	$(CC) $(CFLAGS) -c CMatrix.cpp
+QuantumCircuit.o: Operations.h QuantumCircuit.h
 
-clean:
-	$(RM) main
+Operations.o: Operations.h

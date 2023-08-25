@@ -1,3 +1,6 @@
+#ifndef CMATRIX_H
+#define CMATRIX_H
+
 #include<complex>
 #include<iostream>
 #include<vector>
@@ -81,3 +84,5 @@ CMatrix diagMatrix(int dim);
 * @returns The product of a and b
 */
 CMatrix matmul(CMatrix& a, CMatrix& b);
+
+#endif

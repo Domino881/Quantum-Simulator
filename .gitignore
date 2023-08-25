@@ -33,3 +33,6 @@
 
 # vscode files
 .vscode/*
+
+# test files
+test.cpp
