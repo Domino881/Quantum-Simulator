@@ -33,6 +33,7 @@
 
 # vscode files
 .vscode/*
+*.code-workspace
 
 # test files
 test.cpp

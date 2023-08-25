@@ -11,6 +11,16 @@ CMatrix::CMatrix(int dim){
 
     for (int i=0; i<dim; i++) this->matrix.push_back(row);
 }
+CMatrix::CMatrix(const vector<vector<complex<double> > >& m){
+    assert(m.size() == m[0].size());
+    CMatrix matrix(m.size());
+    for(int i=0; i<m.size(); i++){
+        for(int j=0; j<m.size(); j++){
+            matrix(i,j) = m[i][j];
+        }
+    }
+    this->matrix = matrix.matrix;
+}
 
 void CMatrix::print(){
     int dim = this->matrix.size();
@@ -84,6 +94,16 @@ CMatrix matmul(const CMatrix& a, const CMatrix& b){
             for(int k=0; k<a.dim(); k++){
                 res(i,j) += a(i,k) * b(k,j);
             }
+        }
+    }
+    return res;
+}
+vector<complex<double> > matmul(const CMatrix& a, const vector<complex<double> >& b){
+    assert(a.dim() == b.size());
+    vector<complex<double> > res(b.size(), 0);
+    for(int j=0;j<b.size();j++){
+        for(int k=0; k<a.dim(); k++){
+            res[j] += a(j,k) * b[k];
         }
     }
     return res;

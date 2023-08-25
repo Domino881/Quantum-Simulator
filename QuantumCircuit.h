@@ -4,26 +4,19 @@
 #include"CMatrix.h"
 #include<complex>
 #include<queue>
+#include"Qubit.h"
 using namespace std;
 using namespace complex_literals;
-
-class Qubit{
-    public:
-        Qubit(): statevector({1,0}) {};
-
-        /*
-        * @brief Uses a pseudo-random number to determine the state of the qubit after measuring.
-        *  @returns Either 1 or 0, with probabilities dependent on the qubit's statevector
-        * 
-        * */
-        const bool measure();
-
-        vector<complex<double> > statevector;
-};
 
 class Operation{
     public:
         Operation();
+
+        /*
+        * Virtual - to be overriden in every derived object 
+        * (like Hadamard::act)
+        */
+        virtual void act(vector<complex<double> >& statevector) = 0;
 
         vector<int> qubits;
         vector<int> cbits;
@@ -47,6 +40,8 @@ class QuantumCircuit{
     * 
     * */
     public:
+        vector<double> ClassicalRegister;
+
         /*
         * @brief Creates a new quantum circuit.
         * @param num_qubits number of qubits in the circuit
@@ -69,13 +64,22 @@ class QuantumCircuit{
         */
         void debug_print() const;
 
+        /*
+        * @brief Constructs a directed acyclic graph of operations, based on their order
+        *
+        */
         void constructDag();
+
+        /*
+        * @brief Executes the gates in the circuit
+        *
+        */
+        void run();
 
     private:
         vector<Qubit* > QuantumRegister;
-        vector<double> ClassicalRegister;
 
-        vector<Operation> operations;
+        vector<Operation*> operations;
         priority_queue<Operation*, vector<Operation*>, DagCompare> dag;
 
         int id_counter;

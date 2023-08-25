@@ -21,6 +21,12 @@ class CMatrix{
         CMatrix(int dim);
 
         /*
+        * @brief Constructs a CMatrix object from a std::vector matrix 
+        *
+        */
+        CMatrix(const vector<vector<complex<double> > >& m);
+
+        /*
         * @brief Prints the complex matrix in a nice format
         */
         void print();
@@ -83,6 +89,8 @@ CMatrix diagMatrix(int dim);
 *  @param a,b matrices to be multiplicated
 * @returns The product of a and b
 */
-CMatrix matmul(CMatrix& a, CMatrix& b);
+CMatrix matmul(const CMatrix& a, const CMatrix& b);
+
+vector<complex<double> > matmul(const CMatrix& a, const vector<complex<double> >& b);
 
 #endif

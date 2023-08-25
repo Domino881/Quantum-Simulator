@@ -14,8 +14,12 @@ all: main
 main: main.o CMatrix.o QuantumCircuit.o Operations.o
 	$(CC) $(CFLAGS) -o main main.o CMatrix.o QuantumCircuit.o Operations.o
 
+QuantumCircuit.o: Operations.h QuantumCircuit.h Qubit.h
+
+Operations.o: Operations.h Qubit.h
+
 CMatrix.o: CMatrix.h
 
-QuantumCircuit.o: Operations.h QuantumCircuit.h
-
-Operations.o: Operations.h
+clean:
+	$(RM) *.o
+	$(RM) *.exe

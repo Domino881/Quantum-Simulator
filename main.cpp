@@ -13,6 +13,16 @@ int main(){
     qc.h(0);
     qc.h(1);
 
+    qc.constructDag();
     qc.debug_print();
+    qc.run();
+    qc.debug_print();
+    // vector<complex<double> > diag = {1,2,3};
+    // CMatrix a = diagMatrix(diag);
+    // vector<complex<double> > b = {1,2,3};
+
+    // vector<complex<double> > r = matmul(a,b);
+    // for(auto x: r)printf("%.2f ", real(x));
+    
 
 }
