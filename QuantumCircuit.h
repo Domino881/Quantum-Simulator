@@ -17,12 +17,22 @@ class Operation{
         * (like Hadamard::act)
         */
         virtual void act(std::vector<std::complex<double> >& statevector) = 0;
+        /*
+        * @brief Virtual function measure - to be overriden ONLY by class Measure : Operation
+        *
+        */
         virtual void measure(std::vector<std::shared_ptr<Qubit> >& qubits, int& cbit) const {};
 
+        // The qubits affected by / needed for the operation
         std::vector<int> qubits;
+
+        // The classical bits affected by / needed for the operation
         std::vector<int> cbits;
 
+        // The operations following this one on this->qubits
         std::vector<std::shared_ptr<Operation> > next;
+
+        // The number of operations that need do be done before this one
         int dependencies;
         int id;
         char name;
@@ -56,6 +66,11 @@ class QuantumCircuit{
         */
         void h(int q);
 
+        /*
+        * @brief Adds a measurement to the circuit
+        * @param q qubit to be measured
+        * @param c classical bit to store the result
+        */
         void measure(int q, int c);
 
         void swap(int q1, int q2);
@@ -80,9 +95,13 @@ class QuantumCircuit{
         void run();
 
     private:
+        // Pointers to qubits in the circuit
         std::vector<std::shared_ptr<Qubit> > QuantumRegister;
 
+        // Chronological list of operations
         std::vector<std::shared_ptr<Operation> > operations;
+
+        // Directed acyclic graph to represent operation dependencies
         std::priority_queue<std::shared_ptr<Operation>, std::vector<std::shared_ptr<Operation>>, DagCompare> dag;
 
         int id_counter;

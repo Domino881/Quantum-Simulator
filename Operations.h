@@ -27,7 +27,11 @@ class Measure : public Operation{
 
         void act(std::vector<std::complex<double> >& statevector) override {};
 
-        void measure(std::vector<std::shared_ptr<Qubit> >& qubits, int& cbit) const override;
+        /*
+        * @brief Measures the qubit given by this->qubits[0] and stores the result to cbit.
+        * @param quantumRegister a list of pointers to all qubits in the circuit
+        */
+        void measure(std::vector<std::shared_ptr<Qubit> >& quantumRegister, int& cbit) const override;
 };
 
 #endif

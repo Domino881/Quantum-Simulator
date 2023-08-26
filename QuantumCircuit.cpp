@@ -72,7 +72,7 @@ void QuantumCircuit::debug_print() const{
         printf("(%c%d, [", ops->at(i)->name, ops->at(i)->id);
         for(auto y: ops->at(i)->qubits)printf("%d ", y);
         printf("],[");
-        // for(auto y: x->cbits)pruniqueintf("%d ", y);
+        for(auto y: ops->at(i)->cbits)printf("%d ", y);
         printf("])  ");
     }
 
@@ -120,8 +120,8 @@ void QuantumCircuit::run(){
         // Measurements treated separately
         if(op->name == 'm'){
 
-            //TODO make this the entire statevector!!
             int* cbit = &(this->ClassicalRegister[op->cbits[0]]);
+            // The whole quantum register is added because of possible entanglement
             op->measure(this->QuantumRegister, *cbit);
         }
 
