@@ -9,9 +9,18 @@ using namespace complex_literals;
 
 int main(){
 
-    QuantumCircuit qc(2,1);
+    QuantumCircuit qc(2,5);
     qc.h(0);
     qc.h(1);
+    qc.measure(0,0);
+    qc.h(0);
+    qc.measure(0,1);
+    qc.h(0);
+    qc.measure(0,2);
+    qc.h(0);
+    qc.measure(0,3);
+    qc.measure(0,4);
+
 
     qc.constructDag();
     qc.debug_print();

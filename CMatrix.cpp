@@ -2,27 +2,26 @@
 #include<complex>
 #include<vector>
 #include<cassert>
-using namespace std;
-using namespace complex_literals;
+#include<memory>
 
-CMatrix::CMatrix(int dim){
-    vector<complex<double> > row;
+CMatrix::CMatrix(const int dim){
+    std::vector<std::complex<double> > row;
     for (int i=0; i<dim; i++) row.push_back(0.0);
 
     for (int i=0; i<dim; i++) this->matrix.push_back(row);
 }
-CMatrix::CMatrix(const vector<vector<complex<double> > >& m){
+CMatrix::CMatrix(const std::vector<std::vector<std::complex<double> > >& m){
     assert(m.size() == m[0].size());
-    CMatrix matrix(m.size());
+    auto matrix = std::make_unique<CMatrix>(m.size());
     for(int i=0; i<m.size(); i++){
         for(int j=0; j<m.size(); j++){
-            matrix(i,j) = m[i][j];
+            matrix->matrix[i][j] = m[i][j];
         }
     }
-    this->matrix = matrix.matrix;
+    this->matrix = matrix->matrix;
 }
 
-void CMatrix::print(){
+void CMatrix::print() const{
     int dim = this->matrix.size();
     for(int i=0; i<dim; i++){
         if(i==0)printf("/ ");
@@ -39,14 +38,14 @@ void CMatrix::print(){
     }
 }
 
-const int CMatrix::dim() const{
+int CMatrix::dim() const{
     return this->matrix.size();
 }
 
-complex<double>& CMatrix::operator()(int a, int b){
+std::complex<double> CMatrix::operator()(const int& a, const int& b){
     return this->matrix[a][b];
 }
-const complex<double>& CMatrix::operator()(int a, int b) const{
+const std::complex<double> CMatrix::operator()(const int& a, const int& b) const{
     return this->matrix[a][b];
 }
 
@@ -72,15 +71,15 @@ CMatrix CMatrix::compconj(){
     return conjug;
 }
 
-CMatrix diagMatrix(vector< complex<double> >& diagonal){
+CMatrix diagMatrix(std::vector< std::complex<double> >& diagonal){
     CMatrix r(diagonal.size());
     for(unsigned i=0;i<diagonal.size();i++){
         r(i,i)=diagonal[i];
     }
     return r;
 }
-CMatrix diagMatrix(int dim){
-    vector<complex<double> > v;
+CMatrix diagMatrix(const int& dim){
+    std::vector<std::complex<double> > v;
     for(int i=0;i<dim;i++)v.push_back(1.0);
     return diagMatrix(v);
 }
@@ -98,9 +97,9 @@ CMatrix matmul(const CMatrix& a, const CMatrix& b){
     }
     return res;
 }
-vector<complex<double> > matmul(const CMatrix& a, const vector<complex<double> >& b){
+std::vector<std::complex<double> > matmul(const CMatrix& a, const std::vector<std::complex<double> >& b){
     assert(a.dim() == b.size());
-    vector<complex<double> > res(b.size(), 0);
+    std::vector<std::complex<double> > res(b.size(), 0);
     for(int j=0;j<b.size();j++){
         for(int k=0; k<a.dim(); k++){
             res[j] += a(j,k) * b[k];
@@ -129,7 +128,7 @@ CMatrix CMatrix::operator-() const{
     return r;
 }
 
-const bool CMatrix::isUnitary(double epsilon) const{
+bool CMatrix::isUnitary(const double epsilon) const{
     CMatrix dag = this->dagger();
     CMatrix t = matmul(*this, dag);
 

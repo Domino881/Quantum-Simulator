@@ -2,11 +2,11 @@
 #define QUANTUMCIRCUIT_H
 
 #include"CMatrix.h"
+#include"Qubit.h"
 #include<complex>
 #include<queue>
-#include"Qubit.h"
-using namespace std;
-using namespace complex_literals;
+#include<vector>
+#include<memory>
 
 class Operation{
     public:
@@ -16,12 +16,13 @@ class Operation{
         * Virtual - to be overriden in every derived object 
         * (like Hadamard::act)
         */
-        virtual void act(vector<complex<double> >& statevector) = 0;
+        virtual void act(std::vector<std::complex<double> >& statevector) = 0;
+        virtual void measure(std::vector<std::shared_ptr<Qubit> >& qubits, int& cbit) const {};
 
-        vector<int> qubits;
-        vector<int> cbits;
+        std::vector<int> qubits;
+        std::vector<int> cbits;
 
-        vector<Operation*> next;
+        std::vector<std::shared_ptr<Operation> > next;
         int dependencies;
         int id;
         char name;
@@ -31,7 +32,7 @@ struct DagCompare{
     /*
     * @brief Sorts operations topologically
     */
-    bool operator()(const Operation* a, const Operation* b) const;
+    bool operator()(const std::shared_ptr<Operation> a, const std::shared_ptr<Operation> b) const;
 };
 
 class QuantumCircuit{
@@ -40,7 +41,7 @@ class QuantumCircuit{
     * 
     * */
     public:
-        vector<double> ClassicalRegister;
+        std::vector<int> ClassicalRegister;
 
         /*
         * @brief Creates a new quantum circuit.
@@ -54,6 +55,8 @@ class QuantumCircuit{
         * @param q target qubit for the gate
         */
         void h(int q);
+
+        void measure(int q, int c);
 
         void swap(int q1, int q2);
 
@@ -77,10 +80,10 @@ class QuantumCircuit{
         void run();
 
     private:
-        vector<Qubit* > QuantumRegister;
+        std::vector<std::shared_ptr<Qubit> > QuantumRegister;
 
-        vector<Operation*> operations;
-        priority_queue<Operation*, vector<Operation*>, DagCompare> dag;
+        std::vector<std::shared_ptr<Operation> > operations;
+        std::priority_queue<std::shared_ptr<Operation>, std::vector<std::shared_ptr<Operation>>, DagCompare> dag;
 
         int id_counter;
 

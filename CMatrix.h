@@ -5,12 +5,10 @@
 #include<iostream>
 #include<vector>
 #include<cassert>
-using namespace std;
-using namespace complex_literals;
 
 class CMatrix{
     private:
-        vector< vector<complex<double> > > matrix;
+        std::vector< std::vector<std::complex<double> > > matrix;
 
     public:
         /*
@@ -18,27 +16,27 @@ class CMatrix{
         * @param dim dimension of the matrix
         * @returns A zero matrix of dimension dim
         */
-        CMatrix(int dim);
+        CMatrix(const int dim);
 
         /*
         * @brief Constructs a CMatrix object from a std::vector matrix 
         *
         */
-        CMatrix(const vector<vector<complex<double> > >& m);
+        CMatrix(const std::vector<std::vector<std::complex<double> > >& m);
 
         /*
         * @brief Prints the complex matrix in a nice format
         */
-        void print();
+        void print() const;
 
         /*
         * @returns The dimension of the matrix
         */
-        const int dim() const;
+        int dim() const;
 
     //--------------OPERATORS--------------
-        complex<double>& operator()(int a, int b);
-        const complex<double>& operator()(int a, int b) const;
+        std::complex<double> operator()(const int& a, const int& b);
+        const std::complex<double> operator()(const int& a, const int& b) const;
 
         CMatrix operator+(const CMatrix& a) const;
         CMatrix operator-() const;
@@ -68,21 +66,21 @@ class CMatrix{
         * @returns true if matrix is unitary
         * @param epsilon maximum allowed error from the identity
         */
-        const bool isUnitary(double epsilon=1e-5) const;
+        bool isUnitary(const double epsilon=1e-5) const;
 
 };
 
 /*
 * @brief Returns a diagonal CMatrix object
-* @param diagonal vector of entries along the diagonal
+* @param diagonal std::vector of entries along the diagonal
 */
-CMatrix diagMatrix(vector< complex<double> >& diagonal);
+CMatrix diagMatrix(const std::vector< std::complex<double> >& diagonal);
 
 /*
 * @brief Returns the identity matrix of a given size
 * @param dim dimension of the identity matrix
 */
-CMatrix diagMatrix(int dim);
+CMatrix diagMatrix(const int& dim);
 
 /*
 * @brief Performs matrix multiplication
@@ -91,6 +89,6 @@ CMatrix diagMatrix(int dim);
 */
 CMatrix matmul(const CMatrix& a, const CMatrix& b);
 
-vector<complex<double> > matmul(const CMatrix& a, const vector<complex<double> >& b);
+std::vector<std::complex<double> > matmul(const CMatrix& a, const std::vector<std::complex<double> >& b);
 
 #endif

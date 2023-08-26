@@ -6,8 +6,6 @@
 #include"QuantumCircuit.h"
 #include<vector>
 #include<complex>
-using namespace std;
-using namespace complex_literals;
 
 class Hadamard : public Operation{
     public:
@@ -17,11 +15,19 @@ class Hadamard : public Operation{
         * @brief Applies the operation matrix to the given statevector
         *
         */
-        void act(vector<complex<double> >& statevector);
+        void act(std::vector<std::complex<double> >& statevector) override;
 
     private:
-        const vector<vector<complex<double> > > op_matrix={{sqrt(0.5), sqrt(0.5)},
-                                                           {sqrt(0.5),-sqrt(0.5)}};
+        const std::vector<std::vector<std::complex<double> > > op_matrix;
+};
+
+class Measure : public Operation{
+    public:
+        Measure(int q, int c);
+
+        void act(std::vector<std::complex<double> >& statevector) override {};
+
+        void measure(std::vector<std::shared_ptr<Qubit> >& qubits, int& cbit) const override;
 };
 
 #endif
