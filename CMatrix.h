@@ -91,4 +91,9 @@ CMatrix matmul(const CMatrix& a, const CMatrix& b);
 
 std::vector<std::complex<double> > matmul(const CMatrix& a, const std::vector<std::complex<double> >& b);
 
+CMatrix kroneckerProduct(const CMatrix& a, const CMatrix& b);
+CMatrix kroneckerProduct(const std::vector<CMatrix*>& v);
+
+std::vector<std::complex<double> > kroneckerProduct(const std::vector<std::complex<double> >& a, const std::vector<std::complex<double> >& b);
+std::vector<std::complex<double> > kroneckerProduct(const std::vector<std::vector<std::complex<double> > >& v);
 #endif

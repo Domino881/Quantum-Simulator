@@ -2,7 +2,6 @@
 #define OPERATIONS_H
 
 #include"CMatrix.h"
-#include"Qubit.h"
 #include"QuantumCircuit.h"
 #include<vector>
 #include<complex>
@@ -31,7 +30,7 @@ class Measure : public Operation{
         * @brief Measures the qubit given by this->qubits[0] and stores the result to cbit.
         * @param quantumRegister a list of pointers to all qubits in the circuit
         */
-        void measure(std::vector<std::shared_ptr<Qubit> >& quantumRegister, int& cbit) const override;
+        void measure(std::vector<std::complex<double> > sv, int& cbit) const override;
 };
 
 #endif

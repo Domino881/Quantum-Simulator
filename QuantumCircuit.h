@@ -2,11 +2,11 @@
 #define QUANTUMCIRCUIT_H
 
 #include"CMatrix.h"
-#include"Qubit.h"
 #include<complex>
 #include<queue>
 #include<vector>
 #include<memory>
+#include<bitset>
 
 class Operation{
     public:
@@ -21,7 +21,7 @@ class Operation{
         * @brief Virtual function measure - to be overriden ONLY by class Measure : Operation
         *
         */
-        virtual void measure(std::vector<std::shared_ptr<Qubit> >& qubits, int& cbit) const {};
+        virtual void measure(std::vector<std::complex<double> > sv, int& cbit) const {};
 
         // The qubits affected by / needed for the operation
         std::vector<int> qubits;
@@ -95,8 +95,11 @@ class QuantumCircuit{
         void run();
 
     private:
+        const int num_qubits;
+        std::vector<std::complex<double> > multiStatevector;
+
         // Pointers to qubits in the circuit
-        std::vector<std::shared_ptr<Qubit> > QuantumRegister;
+        // std::vector<std::shared_ptr<Qubit> > QuantumRegister;
 
         // Chronological list of operations
         std::vector<std::shared_ptr<Operation> > operations;

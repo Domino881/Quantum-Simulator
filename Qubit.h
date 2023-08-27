@@ -9,7 +9,7 @@
 
 class Qubit{
     public:
-        Qubit(): statevector({1.f,0.f}) { std::srand(std::time(nullptr)); };
+        Qubit(){ std::srand(std::time(nullptr)); };
 
         /*
         * @brief Uses a pseudo-random number to determine the state of the qubit after measuring.
@@ -17,8 +17,6 @@ class Qubit{
         * 
         * */
         bool measure();
-
-        std::vector<std::complex<double> > statevector;
 };
 
 #endif

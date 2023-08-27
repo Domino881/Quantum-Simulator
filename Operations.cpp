@@ -12,8 +12,24 @@ Hadamard::Hadamard(int q): op_matrix({{std::sqrt(0.5), -std::sqrt(0.5)},
     this->cbits = {};
 }
 void Hadamard::act(std::vector<std::complex<double> >& statevector){
+
+    int num_qubits = std::log2(statevector.size());
+
     CMatrix op(this->op_matrix);
-    statevector = matmul(op, statevector);
+    CMatrix id = diagMatrix(2);
+
+    std::vector<CMatrix*> ops;
+    for(int i=0;i<this->qubits[0];i++){
+        ops.push_back(&id);
+    }
+    ops.push_back(&op);
+
+    for(int i=0;i<num_qubits - this->qubits[0] - 1; i++){
+        ops.push_back(&id);
+    }
+    CMatrix total_op = kroneckerProduct(ops);
+
+    statevector = matmul(total_op, statevector);
 }
 
 
@@ -23,7 +39,5 @@ Measure::Measure(int q, int c){
     this->name = 'm';
     this->cbits = {c};
 }
-void Measure::measure(std::vector<std::shared_ptr<Qubit> >& quantumRegister, int& cbit) const{
-    cbit = quantumRegister[this->qubits[0]]->measure();
-    quantumRegister[this->qubits[0]]->statevector = {(double)cbit==0, (double)cbit==1};
+void Measure::measure(std::vector<std::complex<double> > sv, int& cbit) const{
 }

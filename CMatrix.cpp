@@ -140,3 +140,35 @@ bool CMatrix::isUnitary(const double epsilon) const{
     }
     return true;
 }
+
+CMatrix kroneckerProduct(const CMatrix& a, const CMatrix& b){
+    CMatrix res(a.dim() * b.dim());
+    for(int i=0;i<res.dim();i++){
+        for(int j=0; j<res.dim(); j++){
+            res(i,j) = a(i/b.dim(), j/b.dim()) * b(i%b.dim(), j%b.dim());
+        }
+    }
+    return res;
+}
+CMatrix kroneckerProduct(const std::vector<CMatrix*>& v){
+    CMatrix res = *v[0];
+    for(int i=1; i<v.size(); i++){
+        res = kroneckerProduct(res, *v[i]);
+    }
+    return res;
+}
+
+std::vector<std::complex<double> > kroneckerProduct(const std::vector<std::complex<double> >& a, const std::vector<std::complex<double> >& b){
+    std::vector<std::complex<double> > res(a.size() * b.size());
+    for(int i=0; i<res.size(); i++){
+        res[i] = a[i/b.size()] * b[i%b.size()];
+    }
+    return res;
+}
+std::vector<std::complex<double> > kroneckerProduct(const std::vector<std::vector<std::complex<double> > >& v){
+    std::vector<std::complex<double> > res=v[0];
+    for(int i=1; i<v.size(); i++){
+        res = kroneckerProduct(res, v[i]);
+    }
+    return res;
+}
