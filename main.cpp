@@ -13,7 +13,6 @@ int main(){
     qc.h(0);
     qc.measure(0,0);
 
-
     qc.constructDag();
     qc.debug_print();
     qc.run();

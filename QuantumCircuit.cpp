@@ -54,7 +54,7 @@ void QuantumCircuit::h(int q){
 
 void QuantumCircuit::measure(int q, int c){
     assert(q<this->num_qubits);
-    assert(c<this->ClassicalRegister.size());
+    assert(c<(int)this->ClassicalRegister.size());
 
     std::shared_ptr<Operation> measure = std::make_shared<Measure>(q,c);
     measure->id = this->id_counter++;
@@ -63,7 +63,7 @@ void QuantumCircuit::measure(int q, int c){
 
 void QuantumCircuit::debug_print() const{
     printf("\n%-13s", "q register: ");
-    for(unsigned b=0;b<(1<<this->num_qubits); b++){
+    for(int b=0;b<(1<<this->num_qubits); b++){
         // assuming max 4 qubits!!
         std::bitset<4> bs(b);
         printf("[%s]: %.2f  ", bs.to_string().c_str(), pow(abs(this->multiStatevector[b]),2));
@@ -74,7 +74,7 @@ void QuantumCircuit::debug_print() const{
     printf("\n%-13s", "operations: ");
 
     const auto ops = &(this->operations);
-    for(int i=0;i<ops->size();i++){
+    for(unsigned i=0;i<ops->size();i++){
         printf("(%c%d, [", ops->at(i)->name, ops->at(i)->id);
         for(auto y: ops->at(i)->qubits)printf("%d ", y);
         printf("],[");
@@ -99,7 +99,7 @@ void QuantumCircuit::debug_print() const{
 void QuantumCircuit::constructDag(){
     std::vector<std::shared_ptr<Operation> > nextOp(this->num_qubits, nullptr);
 
-    for(int i=this->operations.size()-1; i>=0; i--){
+    for(int i=(int)this->operations.size()-1; i>=0; i--){
         for(auto q : this->operations[i]->qubits){
             if(nextOp[q] == nullptr){
                 nextOp[q] = this->operations[i];
@@ -112,7 +112,7 @@ void QuantumCircuit::constructDag(){
             nextOp[q] = this->operations[i];
         }
     }
-    for(int i=0;i<this->operations.size();i++){
+    for(unsigned i=0;i<this->operations.size();i++){
         this->dag.push(this->operations[i]);
     }
 }

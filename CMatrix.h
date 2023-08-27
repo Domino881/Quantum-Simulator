@@ -16,7 +16,7 @@ class CMatrix{
         * @param dim dimension of the matrix
         * @returns A zero matrix of dimension dim
         */
-        CMatrix(const int dim);
+        CMatrix(const unsigned dim);
 
         /*
         * @brief Constructs a CMatrix object from a std::vector matrix 
@@ -32,10 +32,10 @@ class CMatrix{
         /*
         * @returns The dimension of the matrix
         */
-        int dim() const;
+        unsigned dim() const;
 
     //--------------OPERATORS--------------
-        std::complex<double> operator()(const int& a, const int& b);
+        std::complex<double>& operator()(const int& a, const int& b);
         const std::complex<double> operator()(const int& a, const int& b) const;
 
         CMatrix operator+(const CMatrix& a) const;
@@ -43,7 +43,6 @@ class CMatrix{
         CMatrix operator-(const CMatrix& a) const{
             return (*this)+(-a);
         }
-
 
         /*
         * @returns The transpose of the matrix

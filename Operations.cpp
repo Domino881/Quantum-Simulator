@@ -11,6 +11,7 @@ Hadamard::Hadamard(int q): op_matrix({{std::sqrt(0.5), -std::sqrt(0.5)},
     this->name='h';
     this->cbits = {};
 }
+// TODO:::: fix the ordering cause its backwards!!!
 void Hadamard::act(std::vector<std::complex<double> >& statevector){
 
     int num_qubits = std::log2(statevector.size());
