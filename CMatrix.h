@@ -83,11 +83,15 @@ CMatrix diagMatrix(const int& dim);
 
 /*
 * @brief Performs matrix multiplication
-*  @param a,b matrices to be multiplicated
+*  @param a,b matrices to be multiplied
 * @returns The product of a and b
 */
 CMatrix matmul(const CMatrix& a, const CMatrix& b);
 
+/*
+* @brief Multiplies the vector b on the left with the matrix a
+* @returns The product ab
+*/
 std::vector<std::complex<double> > matmul(const CMatrix& a, const std::vector<std::complex<double> >& b);
 
 CMatrix kroneckerProduct(const CMatrix& a, const CMatrix& b);

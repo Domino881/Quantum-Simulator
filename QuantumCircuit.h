@@ -97,10 +97,9 @@ class QuantumCircuit{
 
     private:
         const int num_qubits;
+        // The total statevector of the system - represented by the Kronecker (tensor) product of the 
+        // states of the qubits.
         std::vector<std::complex<double> > multiStatevector;
-
-        // Pointers to qubits in the circuit
-        // std::vector<std::shared_ptr<Qubit> > QuantumRegister;
 
         // Chronological list of operations
         std::vector<std::shared_ptr<Operation> > operations;
