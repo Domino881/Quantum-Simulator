@@ -8,6 +8,7 @@
 #include<iostream>
 #include<cmath>
 #include<memory>
+#include<string>
 #include<bitset>
 
 Operation::Operation(){
@@ -61,11 +62,20 @@ void QuantumCircuit::measure(int q, int c){
     this->operations.push_back(measure);
 }
 
+void QuantumCircuit::cx(int q_control, int q_target){
+    assert(q_control<this->num_qubits && q_target<this->num_qubits);
+
+    std::shared_ptr<Operation> cx = std::make_shared<CNot>(q_control, q_target);
+    cx->id = this->id_counter++;
+    this->operations.push_back(cx);
+}
+
 void QuantumCircuit::debug_print() const{
+    const static int bs_size = 2;
     printf("\n%-13s", "q register: ");
     for(int b=0;b<(1<<this->num_qubits); b++){
         // assuming max 4 qubits!!
-        std::bitset<4> bs(b);
+        std::bitset<bs_size> bs(b);
         printf("[%s]: %.2f  ", bs.to_string().c_str(), pow(abs(this->multiStatevector[b]),2));
     }
     printf("\n%-13s", "c register: ");
@@ -75,7 +85,7 @@ void QuantumCircuit::debug_print() const{
 
     const auto ops = &(this->operations);
     for(unsigned i=0;i<ops->size();i++){
-        printf("(%c%d, [", ops->at(i)->name, ops->at(i)->id);
+        printf("(%s%d, [", ops->at(i)->name.c_str(), ops->at(i)->id);
         for(auto y: ops->at(i)->qubits)printf("%d ", y);
         printf("],[");
         for(auto y: ops->at(i)->cbits)printf("%d ", y);
@@ -87,13 +97,55 @@ void QuantumCircuit::debug_print() const{
     while(!dag_copy.empty()){
         auto op = dag_copy.top();
         dag_copy.pop();
-        printf("(%c%d, [", op->name, op->id);
+        printf("(%s%d, [", op->name.c_str(), op->id);
         for(auto y: op->qubits)printf("%d ", y);
         printf("],[");
         for(auto y: op->cbits)printf("%d ", y);
         printf("], %d)  ", op->dependencies);
     }
     printf("\n");
+}
+void QuantumCircuit::draw() const{
+    std::vector<std::vector<char> > blocks{};
+    for(int i=0;i<this->num_qubits;i++){
+        std::vector<char> v(this->operations.size() * 5 + 4, '-');
+        blocks.push_back(v);
+        std::vector<char> w(this->operations.size() * 5 + 4, ' ');
+        blocks.push_back(w);
+    }
+
+    for(unsigned col=0;col<this->operations.size();col++){
+        if(this->operations[col]->name == "h"){
+            blocks[2*this->operations[col]->qubits[0]][2 + 5*col - 1] = '[';
+            blocks[2*this->operations[col]->qubits[0]][2 + 5*col] = 'H';
+            blocks[2*this->operations[col]->qubits[0]][2 + 5*col + 1] = ']';
+        }
+        if(this->operations[col]->name == "cx"){
+            blocks[2*this->operations[col]->qubits[0]][2 + 5*col] = 'o';
+
+            int mid = (this->operations[col]->qubits[0] + this->operations[col]->qubits[1]);
+            blocks[mid][2 + 5*col] = '|';
+
+            blocks[2*this->operations[col]->qubits[1]][2 + 5*col-1] = '[';
+            blocks[2*this->operations[col]->qubits[1]][2 + 5*col] = 'X';
+            blocks[2*this->operations[col]->qubits[1]][2 + 5*col+1] = ']';
+        }
+        if(this->operations[col]->name == "m"){
+            blocks[2*this->operations[col]->qubits[0]][2 + 5*col - 1] = '(';
+            blocks[2*this->operations[col]->qubits[0]][2 + 5*col] = 'M';
+            blocks[2*this->operations[col]->qubits[0]][2 + 5*col + 1] = ')';
+        }
+    }
+    printf("\n");
+    for(int row=0; row<2*this->num_qubits; row++){
+        if(row%2==0)printf("|0> ");
+        else printf("    ");
+
+        for(unsigned col=0; col<blocks[row].size(); col++){
+            printf("%c", blocks[row][col]);
+        }
+        printf("\n");
+    }
 }
 
 void QuantumCircuit::constructDag(){
@@ -124,15 +176,15 @@ void QuantumCircuit::run(){
         auto op = this->dag.top();
 
         // Measurements treated separately
-        // if(op->name == 'm'){
+        if(op->name == "m"){
 
-        //     int* cbit = &(this->ClassicalRegister[op->cbits[0]]);
-        //     // The whole quantum register is added because of possible entanglement
-        //     // op->measure(this->multiStatevector, *cbit);
-        // }
+            // The whole quantum register is added because of possible entanglement
+            op->measure(this->multiStatevector, this->ClassicalRegister[op->cbits[0]]);
+        }
 
-        //TODO *TODO* _TODO_ fix for multiple qubit gates!
         op->act(this->multiStatevector);
         this->dag.pop();
     }
+    // controversial:
+    this->operations.clear();
 }

@@ -17,7 +17,7 @@ class Hadamard : public Operation{
         void act(std::vector<std::complex<double> >& statevector) override;
 
     private:
-        const std::vector<std::vector<std::complex<double> > > op_matrix;
+        const static std::vector<std::vector<std::complex<double> > > op_matrix;
 };
 
 class Measure : public Operation{
@@ -30,7 +30,17 @@ class Measure : public Operation{
         * @brief Measures the qubit given by this->qubits[0] and stores the result to cbit.
         * @param quantumRegister a list of pointers to all qubits in the circuit
         */
-        void measure(std::vector<std::complex<double> > sv, int& cbit) const override;
+        void measure(std::vector<std::complex<double> >& sv, int& cbit) const override;
+};
+
+class CNot : public Operation{
+    public:
+        CNot(int q_control, int q_target);
+
+        void act(std::vector<std::complex<double> >& statevector) override;
+
+    private:
+        const static std::vector<std::vector<std::complex<double> > > op_matrix;
 };
 
 #endif

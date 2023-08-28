@@ -7,7 +7,7 @@ RM = del
 # compiler flags:
 #  -g     - this flag adds debugging information to the executable file
 #  -Wall  - this flag is used to turn on most compiler warnings
-CPPFLAGS  = -ggdb -Wall
+CPPFLAGS  = -g -Wall
 
 all: main
 

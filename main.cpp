@@ -9,12 +9,12 @@ using namespace complex_literals;
 
 int main(){
 
-    QuantumCircuit qc(2,2);
+    QuantumCircuit qc(2,1);
     qc.h(0);
-    qc.measure(0,0);
+    qc.h(0);
 
     qc.constructDag();
-    qc.debug_print();
+    qc.draw();
     qc.run();
     qc.debug_print();
     // vector<complex<double> > diag = {1,2,3};

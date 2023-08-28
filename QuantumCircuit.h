@@ -21,7 +21,7 @@ class Operation{
         * @brief Virtual function measure - to be overriden ONLY by class Measure : Operation
         *
         */
-        virtual void measure(std::vector<std::complex<double> > sv, int& cbit) const {};
+        virtual void measure(std::vector<std::complex<double> >& sv, int& cbit) const {};
 
         // The qubits affected by / needed for the operation
         std::vector<int> qubits;
@@ -35,7 +35,7 @@ class Operation{
         // The number of operations that need do be done before this one
         int dependencies;
         int id;
-        char name;
+        std::string name;
 };
 
 struct DagCompare{
@@ -73,14 +73,15 @@ class QuantumCircuit{
         */
         void measure(int q, int c);
 
-        void swap(int q1, int q2);
-
         void cx(int q_control, int q_target);
+
+        void swap(int q1, int q2);
 
         /*
         * brief Prints out all internal variables
         */
         void debug_print() const;
+        void draw() const;
 
         /*
         * @brief Constructs a directed acyclic graph of operations, based on their order
