@@ -1,37 +1,28 @@
 #include<cstdio>
-#include<string>
-#include<vector>
 #include<iostream>
 #include<complex>
+#include<bitset>
+
 #include"QuantumCircuit.h"
-using namespace std;
-using namespace complex_literals;
+using namespace std::complex_literals;
 
 int main(){
 
-    QuantumCircuit qc(2,5);
+    const int numQubits = 2;
+    const int numCbits = 2;
+
+    QuantumCircuit qc(numQubits, numCbits);
     qc.h(0);
-    qc.h(1);
+    qc.cx(0,1);
     qc.measure(0,0);
-    qc.h(0);
-    qc.measure(0,1);
-    qc.h(0);
-    qc.measure(0,2);
-    qc.h(0);
-    qc.measure(0,3);
-    qc.measure(0,4);
+    qc.measure(1,1);
 
-
-    qc.constructDag();
-    qc.debug_print();
-    qc.run();
-    qc.debug_print();
-    // vector<complex<double> > diag = {1,2,3};
-    // CMatrix a = diagMatrix(diag);
-    // vector<complex<double> > b = {1,2,3};
-
-    // vector<complex<double> > r = matmul(a,b);
-    // for(auto x: r)printf("%.2f ", real(x));
-    
+    qc.run(1000);
+    qc.draw();
+    auto results = qc.getCounts();
+    for(auto x : results){
+        const char* bitmask = std::bitset<10>(x.first).to_string().c_str();
+        printf("%-.2s: %d\n", bitmask+10-numCbits, x.second);
+    }
 
 }

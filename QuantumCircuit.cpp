@@ -1,14 +1,14 @@
 #include"QuantumCircuit.h"
+
 #include"Operations.h"
-#include"CMatrix.h"
-#include"Qubit.h"
-#include<complex>
-#include<queue>
+
+#include<cstdio>
 #include<cassert>
-#include<ctime>
-#include<iostream>
 #include<cmath>
-#include<memory>
+#include<string>
+#include<bitset>
+#include<ctime>
+#include<random>
 
 Operation::Operation(){
     this->next = {};
@@ -16,117 +16,201 @@ Operation::Operation(){
     this->id = -1;
 }
 
-bool DagCompare::operator()(const std::shared_ptr<Operation> a, const std::shared_ptr<Operation> b) const{
-    assert(a->id != -1 && b->id != -1);
-    if(a->dependencies == b->dependencies)
-        return a->id > b->id;
-
-    return a->dependencies > b->dependencies;
-}
-
-
-
-
-QuantumCircuit::QuantumCircuit(int num_qbits, int num_cbits){
-    this->id_counter=0;
+QuantumCircuit::QuantumCircuit(int numQubits, int num_cbits): numQubits(numQubits){
+    this->idCounter=0;
+    std::srand(std::time(nullptr));
 
     std::vector<int> cr;
     cr.resize(num_cbits, 0);
-    this->ClassicalRegister = cr;
+    this->classicalRegister = cr;
 
-    for(int i=0; i<num_qbits; i++){
-        auto q = std::make_shared<Qubit>();
-        this->QuantumRegister.push_back(q);
-    }
+    std::vector<std::complex<double> > init_sv(1<<numQubits, 0.f);
+    init_sv[0] = 1.f;
+    this->totalStatevector = init_sv;
 }
 
 void QuantumCircuit::h(int q){
-    assert(q<this->QuantumRegister.size());
+    assert(q<this->numQubits);
     std::shared_ptr<Operation> h = std::make_shared<Hadamard>(q);
 
-    h->id = this->id_counter++;
+    h->id = this->idCounter++;
     this->operations.push_back(h);
 }
 
 void QuantumCircuit::measure(int q, int c){
-    assert(q<this->QuantumRegister.size());
-    assert(c<this->ClassicalRegister.size());
+    assert(q<this->numQubits);
+    assert(c<(int)this->classicalRegister.size());
 
-    std::shared_ptr<Operation> measure = std::make_shared<Measure>(q,c);
-    measure->id = this->id_counter++;
+    std::shared_ptr<Operation> measure = std::make_shared<Measure>(q,&(this->classicalRegister[c]));
+    measure->id = this->idCounter++;
     this->operations.push_back(measure);
 }
 
+void QuantumCircuit::cx(int qControl, int qTarget){
+    assert(qControl<this->numQubits && qTarget<this->numQubits);
+
+    std::shared_ptr<Operation> cx = std::make_shared<CNot>(qControl, qTarget);
+    cx->id = this->idCounter++;
+    this->operations.push_back(cx);
+}
+
 void QuantumCircuit::debug_print() const{
+    const static int bs_size = 2;
     printf("\n%-13s", "q register: ");
-    for(auto x : this->QuantumRegister){
-        printf("Qubit([%.1f, %.1f])  ", pow(abs(x->statevector[0]),2),pow(abs(x->statevector[1]),2));
+    for(int b=0;b<(1<<this->numQubits); b++){
+        // assuming max 4 qubits!!
+        std::bitset<bs_size> bs(b);
+        printf("[%s]: %.2f  ", bs.to_string().c_str(), pow(abs(this->totalStatevector[b]),2));
     }
     printf("\n%-13s", "c register: ");
-    for(auto x : this->ClassicalRegister)printf("%d  ", x);
+    for(auto x : this->classicalRegister)printf("%d  ", x);
 
     printf("\n%-13s", "operations: ");
 
     const auto ops = &(this->operations);
-    for(int i=0;i<ops->size();i++){
-        printf("(%c%d, [", ops->at(i)->name, ops->at(i)->id);
+    for(unsigned i=0;i<ops->size();i++){
+        printf("(%s%d, [", ops->at(i)->name.c_str(), ops->at(i)->id);
+
         for(auto y: ops->at(i)->qubits)printf("%d ", y);
         printf("],[");
-        for(auto y: ops->at(i)->cbits)printf("%d ", y);
-        printf("])  ");
+
+        for(auto y: ops->at(i)->cbits)printf("%lld ", (y - &this->classicalRegister[0]));
+
+        printf("])");
+        printf(i%5!=4?"  ":"\n             ");
     }
 
-    printf("\n%-13s", "dag: ");
-    auto dag_copy = this->dag;
-    while(!dag_copy.empty()){
-        auto op = dag_copy.top();
-        dag_copy.pop();
-        printf("(%c%d, [", op->name, op->id);
+    printf("\n%-13s", "sortedDag: ");
+
+    for(unsigned i=0;i<this->sortedDag.size();i++){
+        auto op = this->sortedDag[i];
+        printf("(%s%d, [", op->name.c_str(), op->id);
+
         for(auto y: op->qubits)printf("%d ", y);
         printf("],[");
-        for(auto y: op->cbits)printf("%d ", y);
-        printf("], %d)  ", op->dependencies);
+
+        for(auto y: op->cbits)printf("%lld ", (y - &this->classicalRegister[0]));
+        printf("], %d)", op->dependencies);
+
+        printf(i%5!=4?" > ":" >\n             ");
     }
     printf("\n");
 }
+void QuantumCircuit::draw(){
+    if(this->sortedDag.size() < this->operations.size())
+        this->constructDag();
 
-void QuantumCircuit::constructDag(){
-    std::vector<std::shared_ptr<Operation> > nextOp(this->QuantumRegister.size(), nullptr);
+    std::vector<std::vector<char> > blocks{};
+    for(int i=0;i<this->numQubits;i++){
+        std::vector<char> v(2, '-');
+        blocks.push_back(v);
+        std::vector<char> w(this->operations.size() * 5 + 4, ' ');
+        blocks.push_back(w);
+    }
 
-    for(int i=this->operations.size()-1; i>=0; i--){
-        for(auto q : this->operations[i]->qubits){
-            if(nextOp[q] == nullptr){
-                nextOp[q] = this->operations[i];
-                continue;
-            }
+    auto copysortedDag = this->sortedDag;
+    assert(this->sortedDag.size() == this->operations.size());
 
-            this->operations[i]->next.push_back(nextOp[q]);
-            nextOp[q]->dependencies++;
+    for(unsigned i=0;i<this->sortedDag.size();i++){
+        auto op = this->sortedDag[i];
+        auto copyQubits = op->qubits;
 
-            nextOp[q] = this->operations[i];
+        if(op->name == "h"){
+            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[','H',']','-','-'});
+        }
+        if(op->name == "cx"){
+            int maxSize = std::max(blocks[2*copyQubits[0]].size(), blocks[2*copyQubits[1]].size());
+
+            while((int)blocks[2*copyQubits[0]].size() < maxSize)
+                blocks[2*copyQubits[0]].push_back('-');
+            while((int)blocks[2*copyQubits[1]].size() < maxSize)
+                blocks[2*copyQubits[1]].push_back('-');
+
+            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'-','*','-','-','-'});
+            blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'(','+',')','-','-'});
+
+            blocks[copyQubits[0]+copyQubits[1]][1+maxSize] = '|';
+        }
+        if(op->name == "m"){
+            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[','M',']','-','-'});
         }
     }
-    for(int i=0;i<this->operations.size();i++){
-        this->dag.push(this->operations[i]);
+    unsigned maxSize = 0;
+    for(int i=0;i<this->numQubits;i++)
+        maxSize = blocks[2*i].size()>maxSize? blocks[i].size():maxSize;
+
+    for(int i=0; i<this->numQubits; i++){
+        while(blocks[2*i].size() < maxSize)
+            blocks[2*i].push_back('-');
+    }
+
+    printf("\n");
+    for(int row=0; row<2*this->numQubits; row++){
+        if(row%2==0)printf("|0> ");
+        else printf("    ");
+
+        for(unsigned col=0; col<blocks[row].size(); col++){
+            printf("%c", blocks[row][col]);
+        }
+        printf("\n");
     }
 }
 
-void QuantumCircuit::run(){
-    assert(!this->dag.empty());
+void QuantumCircuit::reset(){
+    std::vector<std::complex<double> > ketZero(1<<(this->numQubits), 0.f);
+    ketZero[0] = 1.f;
 
-    while(!this->dag.empty()){
-        auto op = this->dag.top();
+    this->totalStatevector = ketZero;
+}
 
-        // Measurements treated separately
-        if(op->name == 'm'){
+void QuantumCircuit::constructDag(){
+    // Clears the sortedDag
+    this->sortedDag.clear();
+    
+    std::queue<std::shared_ptr<Operation> > queue{};
 
-            int* cbit = &(this->ClassicalRegister[op->cbits[0]]);
-            // The whole quantum register is added because of possible entanglement
-            op->measure(this->QuantumRegister, *cbit);
+    for(auto op : this->operations){
+        if(op->dependencies == 0){
+            queue.push(op);
+        }
+    }
+    while(!queue.empty()){
+        auto op = queue.front();
+        queue.pop();
+
+        for(auto nextOp : op->next){
+            if(--nextOp->dependencies == 0){
+                queue.push(nextOp);
+            }
+        }
+        this->sortedDag.push_back(op);
+    }
+}
+
+void QuantumCircuit::run(int shots){
+    if(this->sortedDag.size() < this->operations.size())
+        this->constructDag();
+
+    for(int shot=0;shot<shots;shot++){
+        // Zero out the statevector
+        this->reset();
+
+        for(auto op : this->sortedDag){
+
+            op->act(this->totalStatevector);
+
         }
 
-        //TODO *TODO* _TODO_ fix for multiple qubit gates!
-        op->act(this->QuantumRegister[op->qubits[0]]->statevector);
-        this->dag.pop();
+        //add counts of current c-register state ('bitmask') to counts
+        long long int bitmask = 0;
+
+        for(unsigned i=0;i<this->classicalRegister.size();i++){
+            bitmask ^= (1<<i)*this->classicalRegister[i];
+        }
+
+        if(!this->counts.count(bitmask))
+            this->counts[bitmask]=1;
+        else
+            this->counts[bitmask]++;
     }
 }
