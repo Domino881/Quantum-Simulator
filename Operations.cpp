@@ -5,9 +5,7 @@
 #include<complex>
 
 #include"CMatrix.h"
-#include"Operations.h"
 #include"CMatrix.h"
-#include"QuantumCircuit.h"
 
 const std::vector<std::vector<std::complex<double> > > Hadamard::operationMatrix = {
                                                                             {std::sqrt(0.5), std::sqrt(0.5)},

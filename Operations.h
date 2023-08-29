@@ -9,6 +9,8 @@
 #include<vector>
 #include<complex>
 
+#include"QuantumCircuit.h"
+
 class Hadamard : public Operation{
     public:
         Hadamard(int q);
