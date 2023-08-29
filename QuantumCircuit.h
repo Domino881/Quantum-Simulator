@@ -1,12 +1,16 @@
-#ifndef QUANTUMCIRCUIT_H
-#define QUANTUMCIRCUIT_H
+#pragma once
 
-#include"CMatrix.h"
-#include<complex>
-#include<queue>
-#include<vector>
+/*
+* @file QuantumCircuit.h
+* @brief Declares the base Operation class, as well as the QuantumCircuit class with its core functionality
+* @author Dominik Kuczynski
+*/
+
+#include<ctime>
 #include<memory>
-#include<bitset>
+#include<vector>
+#include<queue>
+#include<complex>
 
 class Operation{
     public:
@@ -21,7 +25,7 @@ class Operation{
         * @brief Virtual function measure - to be overriden ONLY by class Measure : Operation
         *
         */
-        virtual void measure(std::vector<std::complex<double> >& sv, int& cbit) const {};
+        virtual void measure(std::vector<std::complex<double> >& statevector, int& cbit) const {};
 
         // The qubits affected by / needed for the operation
         std::vector<int> qubits;
@@ -51,14 +55,14 @@ class QuantumCircuit{
     * 
     * */
     public:
-        std::vector<int> ClassicalRegister;
+        std::vector<int> classicalRegister;
 
         /*
         * @brief Creates a new quantum circuit.
         * @param num_qubits number of qubits in the circuit
         * @param num_cbits number of classical bits in the circuit
         */
-        QuantumCircuit(int num_qubits, int num_cbits);
+        QuantumCircuit(int numQubits, int numCbits);
 
         /*
         * @brief Adds a hadamard gate to the circuit
@@ -73,7 +77,7 @@ class QuantumCircuit{
         */
         void measure(int q, int c);
 
-        void cx(int q_control, int q_target);
+        void cx(int qControl, int qTarget);
 
         void swap(int q1, int q2);
 
@@ -96,10 +100,10 @@ class QuantumCircuit{
         void run();
 
     private:
-        const int num_qubits;
+        const int numQubits;
         // The total statevector of the system - represented by the Kronecker (tensor) product of the 
         // states of the qubits.
-        std::vector<std::complex<double> > multiStatevector;
+        std::vector<std::complex<double> > totalStatevector;
 
         // Chronological list of operations
         std::vector<std::shared_ptr<Operation> > operations;
@@ -107,8 +111,6 @@ class QuantumCircuit{
         // Directed acyclic graph to represent operation dependencies
         std::priority_queue<std::shared_ptr<Operation>, std::vector<std::shared_ptr<Operation>>, DagCompare> dag;
 
-        int id_counter;
+        int idCounter;
 
 };
-
-#endif

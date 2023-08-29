@@ -1,8 +1,11 @@
-#ifndef OPERATIONS_H
-#define OPERATIONS_H
+#pragma once
 
-#include"CMatrix.h"
-#include"QuantumCircuit.h"
+/*
+* @file Operations.h
+* @brief Declares the operation subclasses, including their act() and measure() functions
+* @author Dominik Kuczynski
+*/
+
 #include<vector>
 #include<complex>
 
@@ -17,7 +20,7 @@ class Hadamard : public Operation{
         void act(std::vector<std::complex<double> >& statevector) override;
 
     private:
-        const static std::vector<std::vector<std::complex<double> > > op_matrix;
+        const static std::vector<std::vector<std::complex<double> > > operationMatrix;
 };
 
 class Measure : public Operation{
@@ -30,17 +33,15 @@ class Measure : public Operation{
         * @brief Measures the qubit given by this->qubits[0] and stores the result to cbit.
         * @param quantumRegister a list of pointers to all qubits in the circuit
         */
-        void measure(std::vector<std::complex<double> >& sv, int& cbit) const override;
+        void measure(std::vector<std::complex<double> >& statevector, int& cbit) const override;
 };
 
 class CNot : public Operation{
     public:
-        CNot(int q_control, int q_target);
+        CNot(int qControl, int qTarget);
 
         void act(std::vector<std::complex<double> >& statevector) override;
 
     private:
-        const static std::vector<std::vector<std::complex<double> > > op_matrix;
+        const static std::vector<std::vector<std::complex<double> > > operationMatrix;
 };
-
-#endif

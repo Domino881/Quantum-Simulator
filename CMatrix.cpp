@@ -1,6 +1,5 @@
 #include"CMatrix.h"
-#include<complex>
-#include<vector>
+
 #include<cassert>
 #include<memory>
 
@@ -22,7 +21,8 @@ CMatrix::CMatrix(const std::vector<std::vector<std::complex<double> > >& m){
 }
 
 void CMatrix::print() const{
-    unsigned dim = this->matrix.size();
+    unsigned dim = this->dim();
+
     for(unsigned i=0; i<dim; i++){
         if(i==0)printf("/ ");
         else if(i==dim-1)printf("\\ ");
@@ -42,11 +42,11 @@ unsigned CMatrix::dim() const{
     return this->matrix.size();
 }
 
-std::complex<double>& CMatrix::operator()(const int& a, const int& b){
-    return this->matrix[a][b];
+std::complex<double>& CMatrix::operator()(const int& i, const int& j){
+    return this->matrix[i][j];
 }
-const std::complex<double> CMatrix::operator()(const int& a, const int& b) const{
-    return this->matrix[a][b];
+const std::complex<double> CMatrix::operator()(const int& i, const int& j) const{
+    return this->matrix[i][j];
 }
 
 CMatrix CMatrix::t() const{
@@ -78,7 +78,7 @@ CMatrix diagMatrix(std::vector< std::complex<double> >& diagonal){
     }
     return r;
 }
-CMatrix diagMatrix(const int& dim){
+CMatrix identityMatrix(const int& dim){
     CMatrix id(dim);
     for(int i=0;i<dim;i++)id(i,i)=1.f;
     return id;
@@ -99,7 +99,9 @@ CMatrix matmul(const CMatrix& a, const CMatrix& b){
 }
 std::vector<std::complex<double> > matmul(const CMatrix& a, const std::vector<std::complex<double> >& b){
     assert(a.dim() == b.size());
+
     std::vector<std::complex<double> > res(b.size(), 0);
+
     for(unsigned j=0;j<b.size();j++){
         for(unsigned k=0; k<a.dim(); k++){
             res[j] += a(j,k) * b[k];
@@ -108,11 +110,12 @@ std::vector<std::complex<double> > matmul(const CMatrix& a, const std::vector<st
     return res;
 }
 
-CMatrix CMatrix::operator+(const CMatrix& a) const{
+CMatrix CMatrix::operator+(const CMatrix& m) const{
     CMatrix r = *this;
+
     for(unsigned i=0; i<r.dim(); i++){
         for(unsigned j=0; j<r.dim(); j++){
-            r(i,j) += a(i,j);
+            r(i,j) += m(i,j);
         }
     }
     return r;
@@ -120,6 +123,7 @@ CMatrix CMatrix::operator+(const CMatrix& a) const{
 
 CMatrix CMatrix::operator-() const{
     CMatrix r = *this;
+
     for(unsigned i=0; i<r.dim(); i++){
         for(unsigned j=0; j<r.dim(); j++){
             r(i,j) = -r(i,j);
@@ -132,7 +136,8 @@ bool CMatrix::isUnitary(const double epsilon) const{
     CMatrix dag = this->dagger();
     CMatrix t = matmul(*this, dag);
 
-    CMatrix res = diagMatrix(t.dim()) - t;
+    CMatrix res = identityMatrix(t.dim()) - t;
+
     for(unsigned i=0;i<t.dim();i++){
         for(unsigned j=0;j<t.dim();j++){
             if(abs(res(i,j)) >= epsilon) return false;
@@ -143,6 +148,7 @@ bool CMatrix::isUnitary(const double epsilon) const{
 
 CMatrix kroneckerProduct(const CMatrix& a, const CMatrix& b){
     CMatrix res(a.dim() * b.dim());
+
     for(unsigned i=0;i<res.dim();i++){
         for(unsigned j=0; j<res.dim(); j++){
             res(i,j) = a(i/b.dim(), j/b.dim()) * b(i%b.dim(), j%b.dim());

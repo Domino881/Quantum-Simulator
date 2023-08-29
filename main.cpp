@@ -1,11 +1,9 @@
 #include<cstdio>
-#include<string>
-#include<vector>
 #include<iostream>
 #include<complex>
+
 #include"QuantumCircuit.h"
-using namespace std;
-using namespace complex_literals;
+using namespace std::complex_literals;
 
 int main(){
 
