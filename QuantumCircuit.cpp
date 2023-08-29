@@ -133,9 +133,9 @@ void QuantumCircuit::draw() const{
             blocks[2*copyQubits[0]].push_back('-');
             blocks[2*copyQubits[0]].push_back('-');
 
-            blocks[2*copyQubits[1]].push_back('[');
-            blocks[2*copyQubits[1]].push_back('X');
-            blocks[2*copyQubits[1]].push_back(']');
+            blocks[2*copyQubits[1]].push_back('(');
+            blocks[2*copyQubits[1]].push_back('+');
+            blocks[2*copyQubits[1]].push_back(')');
             blocks[2*copyQubits[1]].push_back('-');
             blocks[2*copyQubits[1]].push_back('-');
 
@@ -149,6 +149,15 @@ void QuantumCircuit::draw() const{
             blocks[2*copyQubits[0]].push_back('-');
         }
     }
+    int maxSize = 0;
+    for(int i=0;i<this->numQubits;i++)
+        maxSize = blocks[2*i].size()>maxSize? blocks[i].size():maxSize;
+
+    for(int i=0; i<this->numQubits; i++){
+        while(blocks[2*i].size() < maxSize)
+            blocks[2*i].push_back('-');
+    }
+
     printf("\n");
     for(int row=0; row<2*this->numQubits; row++){
         if(row%2==0)printf("|0> ");
@@ -195,4 +204,13 @@ void QuantumCircuit::run(){
         op->act(this->totalStatevector);
 
     }
+
+    long long int bitmask = 0;
+    for(int i=0;i<this->classicalRegister.size();i++){
+        bitmask ^= (1<<i)*this->classicalRegister[i];
+    }
+    if(!this->counts.count(bitmask))
+        this->counts[bitmask]=1;
+    else
+        this->counts[bitmask]++;
 }

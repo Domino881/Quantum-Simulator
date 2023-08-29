@@ -51,7 +51,7 @@ Measure::Measure(int q, int* c){
 }
 void Measure::act(std::vector<std::complex<double> >& statevector){
     int q = this->qubits[0];
-    double sqrtProb[2] = {0.f,0.f};
+    double probability[2] = {0.f,0.f};
 
     // An int of the form 00...1...00 in binary, where 1 is on the qth position.
     // Then, if binary-ANDed with an int corresponding to a basis state of the s.vector,
@@ -59,18 +59,18 @@ void Measure::act(std::vector<std::complex<double> >& statevector){
     int bs = 1<<q;
 
     for(unsigned i=0; i<statevector.size(); i++){
-        sqrtProb[(bs&i) > 0] += std::abs(statevector[i]);
+        probability[(bs&i) > 0] += std::pow(std::abs(statevector[i]),2);
     }
     double r = (double)std::rand() / RAND_MAX;
-    printf("probability: %.2f, r: %.2f\n", std::pow(sqrtProb[1], 2), r);
-    bool result = r < std::pow(sqrtProb[1], 2);
+    printf("probability: %.2f, r: %.2f\n", probability[1], r);
+    bool result = r < probability[1];
 
     for(unsigned i=0; i<statevector.size(); i++){
         // States corresponding to the qubit's state opposite to measured have 0 probability.
         if( (bs&i) != result ){statevector[i]=0; continue;}
 
         // Remaining states become normalized.
-        statevector[i] /= sqrtProb[result];
+        statevector[i] /= std::sqrt(probability[result]);
     }
     *this->cbits[0] = (int)result;
 }

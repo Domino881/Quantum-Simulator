@@ -11,6 +11,7 @@
 #include<vector>
 #include<queue>
 #include<complex>
+#include<map>
 
 class Operation{
     public:
@@ -43,8 +44,6 @@ class QuantumCircuit{
     * 
     * */
     public:
-        std::vector<int> classicalRegister;
-
         /*
         * @brief Creates a new quantum circuit.
         * @param num_qubits number of qubits in the circuit
@@ -87,11 +86,19 @@ class QuantumCircuit{
         */
         void run();
 
+        /*
+        * @brief Returns how many times each configuration was measured
+        * @returns a map from bitmask of a configuration to the number of its counts
+        */
+        std::map<long long int, int> getCounts() {return this->counts;};
+
     private:
         const int numQubits;
         // The total statevector of the system - represented by the Kronecker (tensor) product of the 
         // states of the qubits.
         std::vector<std::complex<double> > totalStatevector;
+
+        std::vector<int> classicalRegister;
 
         // Chronological list of operations
         std::vector<std::shared_ptr<Operation> > operations;
@@ -102,4 +109,5 @@ class QuantumCircuit{
 
         int idCounter;
 
+        std::map<long long int, int> counts;
 };
