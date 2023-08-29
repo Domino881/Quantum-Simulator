@@ -21,17 +21,12 @@ class Operation{
         * (like Hadamard::act)
         */
         virtual void act(std::vector<std::complex<double> >& statevector) = 0;
-        /*
-        * @brief Virtual function measure - to be overriden ONLY by class Measure : Operation
-        *
-        */
-        virtual void measure(std::vector<std::complex<double> >& statevector, int& cbit) const {};
 
         // The qubits affected by / needed for the operation
         std::vector<int> qubits;
 
         // The classical bits affected by / needed for the operation
-        std::vector<int> cbits;
+        std::vector<int*> cbits;
 
         // The operations following this one on this->qubits
         std::vector<std::shared_ptr<Operation> > next;

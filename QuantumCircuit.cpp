@@ -7,6 +7,8 @@
 #include<cmath>
 #include<string>
 #include<bitset>
+#include<ctime>
+#include<random>
 
 Operation::Operation(){
     this->next = {};
@@ -27,6 +29,7 @@ bool DagCompare::operator()(const std::shared_ptr<Operation> a, const std::share
 
 QuantumCircuit::QuantumCircuit(int numQubits, int num_cbits): numQubits(numQubits){
     this->idCounter=0;
+    std::srand(std::time(nullptr));
 
     std::vector<int> cr;
     cr.resize(num_cbits, 0);
@@ -54,7 +57,7 @@ void QuantumCircuit::measure(int q, int c){
     assert(q<this->numQubits);
     assert(c<(int)this->classicalRegister.size());
 
-    std::shared_ptr<Operation> measure = std::make_shared<Measure>(q,c);
+    std::shared_ptr<Operation> measure = std::make_shared<Measure>(q,&(this->classicalRegister[c]));
     measure->id = this->idCounter++;
     this->operations.push_back(measure);
 }
@@ -83,22 +86,30 @@ void QuantumCircuit::debug_print() const{
     const auto ops = &(this->operations);
     for(unsigned i=0;i<ops->size();i++){
         printf("(%s%d, [", ops->at(i)->name.c_str(), ops->at(i)->id);
+
         for(auto y: ops->at(i)->qubits)printf("%d ", y);
         printf("],[");
-        for(auto y: ops->at(i)->cbits)printf("%d ", y);
-        printf("])  ");
+
+        for(auto y: ops->at(i)->cbits)printf("%lld ", (y - &this->classicalRegister[0]));
+
+        printf("])");
+        printf(i%5!=4?"  ":"\n             ");
     }
 
     printf("\n%-13s", "dag: ");
-    auto dag_copy = this->dag;
-    while(!dag_copy.empty()){
-        auto op = dag_copy.top();
-        dag_copy.pop();
+    auto dagCopy = this->dag;
+    while(!dagCopy.empty()){
+        auto op = dagCopy.top();
+        dagCopy.pop();
         printf("(%s%d, [", op->name.c_str(), op->id);
+
         for(auto y: op->qubits)printf("%d ", y);
         printf("],[");
-        for(auto y: op->cbits)printf("%d ", y);
-        printf("], %d)  ", op->dependencies);
+
+        for(auto y: op->cbits)printf("%lld ", (y - &this->classicalRegister[0]));
+        printf("], %d)", op->dependencies);
+
+        printf((this->dag.size()-dagCopy.size())%5!=4?" > ":" >\n             ");
     }
     printf("\n");
 }
@@ -146,6 +157,11 @@ void QuantumCircuit::draw() const{
 }
 
 void QuantumCircuit::constructDag(){
+    // Clears the dag
+    while(!this->dag.empty())
+        this->dag.pop();
+
+    // Points to the next operation on a given qubit
     std::vector<std::shared_ptr<Operation> > nextOp(this->numQubits, nullptr);
 
     for(int i=(int)this->operations.size()-1; i>=0; i--){
@@ -167,21 +183,14 @@ void QuantumCircuit::constructDag(){
 }
 
 void QuantumCircuit::run(){
-    assert(!this->dag.empty());
+    if(this->dag.size() < this->operations.size())
+        this->constructDag();
 
-    while(!this->dag.empty()){
-        auto op = this->dag.top();
-
-        // Measurements treated separately
-        if(op->name == "m"){
-
-            // The whole quantum register is added because of possible entanglement
-            op->measure(this->totalStatevector, this->classicalRegister[op->cbits[0]]);
-        }
+    auto dagCopy = this->dag;
+    while(!dagCopy.empty()){
+        auto op = dagCopy.top();
 
         op->act(this->totalStatevector);
-        this->dag.pop();
+        dagCopy.pop();
     }
-    // controversial:
-    this->operations.clear();
 }

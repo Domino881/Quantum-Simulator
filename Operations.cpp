@@ -44,13 +44,12 @@ void Hadamard::act(std::vector<std::complex<double> >& statevector){
 
 
 
-Measure::Measure(int q, int c){
-    std::srand(std::time(nullptr));
+Measure::Measure(int q, int* c){
     this->qubits = {q};
     this->name = "m";
     this->cbits = {c};
 }
-void Measure::measure(std::vector<std::complex<double> >& statevector, int& cbit) const{
+void Measure::act(std::vector<std::complex<double> >& statevector){
     int q = this->qubits[0];
     double sqrtProb[2] = {0.f,0.f};
 
@@ -62,7 +61,8 @@ void Measure::measure(std::vector<std::complex<double> >& statevector, int& cbit
     for(unsigned i=0; i<statevector.size(); i++){
         sqrtProb[(bs&i) > 0] += std::abs(statevector[i]);
     }
-    double r = std::rand() / RAND_MAX;
+    double r = (double)std::rand() / RAND_MAX;
+    printf("probability: %.2f, r: %.2f\n", std::pow(sqrtProb[1], 2), r);
     bool result = r < std::pow(sqrtProb[1], 2);
 
     for(unsigned i=0; i<statevector.size(); i++){
@@ -72,7 +72,7 @@ void Measure::measure(std::vector<std::complex<double> >& statevector, int& cbit
         // Remaining states become normalized.
         statevector[i] /= sqrtProb[result];
     }
-    cbit = (int)result;
+    *this->cbits[0] = (int)result;
 }
 
 
