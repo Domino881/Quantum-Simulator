@@ -37,13 +37,6 @@ class Operation{
         std::string name;
 };
 
-struct DagCompare{
-    /*
-    * @brief Sorts operations topologically
-    */
-    bool operator()(const std::shared_ptr<Operation> a, const std::shared_ptr<Operation> b) const;
-};
-
 class QuantumCircuit{
     /*
     *
@@ -104,7 +97,8 @@ class QuantumCircuit{
         std::vector<std::shared_ptr<Operation> > operations;
 
         // Directed acyclic graph to represent operation dependencies
-        std::priority_queue<std::shared_ptr<Operation>, std::vector<std::shared_ptr<Operation>>, DagCompare> dag;
+        // sorted by QuantumCircuit::constructDag
+        std::vector<std::shared_ptr<Operation> > sortedDag;
 
         int idCounter;
 
