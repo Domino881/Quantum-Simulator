@@ -62,7 +62,7 @@ void Measure::act(std::vector<std::complex<double> >& statevector){
         probability[(bs&i) > 0] += std::pow(std::abs(statevector[i]),2);
     }
     double r = (double)std::rand() / RAND_MAX;
-    printf("probability: %.2f, r: %.2f\n", probability[1], r);
+    // printf("probability: %.2f, r: %.2f\n", probability[1], r);
     bool result = r < probability[1];
 
     for(unsigned i=0; i<statevector.size(); i++){

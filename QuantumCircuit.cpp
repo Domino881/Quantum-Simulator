@@ -96,7 +96,10 @@ void QuantumCircuit::debug_print() const{
     }
     printf("\n");
 }
-void QuantumCircuit::draw() const{
+void QuantumCircuit::draw(){
+    if(this->sortedDag.size() < this->operations.size())
+        this->constructDag();
+
     std::vector<std::vector<char> > blocks{};
     for(int i=0;i<this->numQubits;i++){
         std::vector<char> v(2, '-');
@@ -113,11 +116,7 @@ void QuantumCircuit::draw() const{
         auto copyQubits = op->qubits;
 
         if(op->name == "h"){
-            blocks[2*copyQubits[0]].push_back('[');
-            blocks[2*copyQubits[0]].push_back('H');
-            blocks[2*copyQubits[0]].push_back(']');
-            blocks[2*copyQubits[0]].push_back('-');
-            blocks[2*copyQubits[0]].push_back('-');
+            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[','H',']','-','-'});
         }
         if(op->name == "cx"){
             int maxSize = std::max(blocks[2*copyQubits[0]].size(), blocks[2*copyQubits[1]].size());
@@ -127,29 +126,16 @@ void QuantumCircuit::draw() const{
             while((int)blocks[2*copyQubits[1]].size() < maxSize)
                 blocks[2*copyQubits[1]].push_back('-');
 
-            blocks[2*copyQubits[0]].push_back('-');
-            blocks[2*copyQubits[0]].push_back('*');
-            blocks[2*copyQubits[0]].push_back('-');
-            blocks[2*copyQubits[0]].push_back('-');
-            blocks[2*copyQubits[0]].push_back('-');
-
-            blocks[2*copyQubits[1]].push_back('(');
-            blocks[2*copyQubits[1]].push_back('+');
-            blocks[2*copyQubits[1]].push_back(')');
-            blocks[2*copyQubits[1]].push_back('-');
-            blocks[2*copyQubits[1]].push_back('-');
+            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'-','*','-','-','-'});
+            blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'(','+',')','-','-'});
 
             blocks[copyQubits[0]+copyQubits[1]][1+maxSize] = '|';
         }
         if(op->name == "m"){
-            blocks[2*copyQubits[0]].push_back('[');
-            blocks[2*copyQubits[0]].push_back('M');
-            blocks[2*copyQubits[0]].push_back(']');
-            blocks[2*copyQubits[0]].push_back('-');
-            blocks[2*copyQubits[0]].push_back('-');
+            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[','M',']','-','-'});
         }
     }
-    int maxSize = 0;
+    unsigned maxSize = 0;
     for(int i=0;i<this->numQubits;i++)
         maxSize = blocks[2*i].size()>maxSize? blocks[i].size():maxSize;
 
@@ -168,6 +154,13 @@ void QuantumCircuit::draw() const{
         }
         printf("\n");
     }
+}
+
+void QuantumCircuit::reset(){
+    std::vector<std::complex<double> > ketZero(1<<(this->numQubits), 0.f);
+    ketZero[0] = 1.f;
+
+    this->totalStatevector = ketZero;
 }
 
 void QuantumCircuit::constructDag(){
@@ -194,23 +187,30 @@ void QuantumCircuit::constructDag(){
     }
 }
 
-void QuantumCircuit::run(){
+void QuantumCircuit::run(int shots){
     if(this->sortedDag.size() < this->operations.size())
         this->constructDag();
 
-    auto sortedDagCopy = this->sortedDag;
-    for(auto op : sortedDag){
+    for(int shot=0;shot<shots;shot++){
+        // Zero out the statevector
+        this->reset();
 
-        op->act(this->totalStatevector);
+        for(auto op : this->sortedDag){
 
+            op->act(this->totalStatevector);
+
+        }
+
+        //add counts of current c-register state ('bitmask') to counts
+        long long int bitmask = 0;
+
+        for(unsigned i=0;i<this->classicalRegister.size();i++){
+            bitmask ^= (1<<i)*this->classicalRegister[i];
+        }
+
+        if(!this->counts.count(bitmask))
+            this->counts[bitmask]=1;
+        else
+            this->counts[bitmask]++;
     }
-
-    long long int bitmask = 0;
-    for(int i=0;i<this->classicalRegister.size();i++){
-        bitmask ^= (1<<i)*this->classicalRegister[i];
-    }
-    if(!this->counts.count(bitmask))
-        this->counts[bitmask]=1;
-    else
-        this->counts[bitmask]++;
 }

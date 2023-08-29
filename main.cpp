@@ -8,23 +8,21 @@ using namespace std::complex_literals;
 
 int main(){
 
-    QuantumCircuit qc(2,5);
-    qc.h(0);
-    qc.measure(0,0);
+    const int numQubits = 2;
+    const int numCbits = 2;
 
-    qc.debug_print();
-    qc.run();
+    QuantumCircuit qc(numQubits, numCbits);
+    qc.h(0);
+    qc.cx(0,1);
+    qc.measure(0,0);
+    qc.measure(1,1);
+
+    qc.run(1000);
     qc.draw();
     auto results = qc.getCounts();
     for(auto x : results){
-        printf("%-.2s: %d\n", std::bitset<10>(x.first).to_string().c_str(), x.second);
+        const char* bitmask = std::bitset<10>(x.first).to_string().c_str();
+        printf("%-.2s: %d\n", bitmask+10-numCbits, x.second);
     }
-    // vector<complex<double> > diag = {1,2,3};
-    // CMatrix a = diagMatrix(diag);
-    // vector<complex<double> > b = {1,2,3};
-
-    // vector<complex<double> > r = matmul(a,b);
-    // for(auto x: r)printf("%.2f ", real(x));
-    
 
 }

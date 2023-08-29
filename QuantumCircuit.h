@@ -72,7 +72,13 @@ class QuantumCircuit{
         * brief Prints out all internal variables
         */
         void debug_print() const;
-        void draw() const;
+        void draw();
+
+        /*
+        * @brief Resets the total statevector to the initial ket zero
+        *
+        */
+        void reset();
 
         /*
         * @brief Constructs a directed acyclic graph of operations, based on their order
@@ -82,9 +88,9 @@ class QuantumCircuit{
 
         /*
         * @brief Executes the gates in the circuit
-        *
+        * @param shots the number of times to run the circuit
         */
-        void run();
+        void run(int shots=1);
 
         /*
         * @brief Returns how many times each configuration was measured
@@ -109,5 +115,6 @@ class QuantumCircuit{
 
         int idCounter;
 
+        // Maps a long long bitmask to its number of counts after run()
         std::map<long long int, int> counts;
 };
