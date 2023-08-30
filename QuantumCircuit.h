@@ -15,14 +15,22 @@
 
 class Operation{
     public:
-        Operation();
+        /*
+        * @brief Creates an Operation-class object
+        * @param qubits list of qubits on which the operation acts
+        * @param cbits pointers to classical bits to be used by the operation
+        */
+        Operation(const std::string& label, const std::vector<int>& qubits, const std::vector<int*>& cbits);
+
+        virtual ~Operation() {};
 
         /*
         * Virtual - to be overriden in every derived object 
-        * (like Hadamard::act)
+        * (like singleQubitGate::act)
         */
         virtual void act(std::vector<std::complex<double> >& statevector) = 0;
 
+        std::string label;
         // The qubits affected by / needed for the operation
         std::vector<int> qubits;
 
@@ -35,14 +43,9 @@ class Operation{
         // The number of operations that need do be done before this one
         int dependencies;
         int id;
-        std::string name;
 };
 
 class QuantumCircuit{
-    /*
-    *
-    * 
-    * */
     public:
         /*
         * @brief Creates a new quantum circuit.
