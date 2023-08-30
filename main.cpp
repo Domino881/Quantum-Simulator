@@ -5,22 +5,25 @@
 
 #include"QuantumCircuit.h"
 using namespace std::complex_literals;
+#define numCbits 3
+#define numQubits 3
 
 int main(){
 
-    const int numQubits = 2;
-    const int numCbits = 2;
-
     QuantumCircuit qc(numQubits, numCbits);
     qc.x(0);
+    qc.cx(0,2);
     qc.measure(0,0);
+    qc.measure(1,1);
+    qc.measure(2,2);
 
-    qc.run(5000);
+    qc.run();
     qc.draw();
+    qc.debug_print();
     auto results = qc.getCounts();
     for(auto x : results){
         const char* bitmask = std::bitset<10>(x.first).to_string().c_str();
-        printf("%-.2s: %d\n", bitmask+10-numCbits, x.second);
+        printf("%s: %d\n", bitmask+10-numCbits, x.second);
     }
 
 }

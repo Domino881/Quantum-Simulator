@@ -132,13 +132,17 @@ void QuantumCircuit::draw(){
 
                 while((int)blocks[2*copyQubits[0]].size() < maxSize)
                     blocks[2*copyQubits[0]].push_back('-');
+
                 while((int)blocks[2*copyQubits[1]].size() < maxSize)
                     blocks[2*copyQubits[1]].push_back('-');
 
+                int minQ = 2*std::min(copyQubits[0],copyQubits[1]);
+                int diffQ = 2*std::abs(copyQubits[0]-copyQubits[1]);
+                for(int j=1; j<diffQ; j+=2)
+                    blocks[minQ+j][1+maxSize] = '|';
+                
                 blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'-','*','-','-','-'});
                 blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'(','+',')','-','-'});
-
-                blocks[copyQubits[0]+copyQubits[1]][1+maxSize] = '|';
             }
         }
     }

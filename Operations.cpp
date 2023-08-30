@@ -78,15 +78,13 @@ void Measure::act(std::vector<std::complex<double> >& statevector){
 
 
 const std::vector<std::vector<std::complex<double> > > CNot::operationMatrix = {
-                                                                         {1.f, 0.f, 0.f, 0.f},
-                                                                         {0.f, 0.f, 0.f, 1.f},
-                                                                         {0.f, 0.f, 1.f, 0.f},
-                                                                         {0.f, 1.f, 0.f, 0.f}
+                                                                         {0.f, 1.f},
+                                                                         {1.f, 0.f}
                                                                          };
 // TODO: fix for non-consecutive qubits
 CNot::CNot(int qControl, int qTarget){
     this->qubits = {qControl, qTarget};
-    assert(qTarget-qControl == 1);
+    // assert(qTarget-qControl == 1);
 
     this->name="cx";
     this->cbits = {};
@@ -94,20 +92,30 @@ CNot::CNot(int qControl, int qTarget){
 void CNot::act(std::vector<std::complex<double> >& statevector){
     int numQubits = std::log2(statevector.size());
 
-    // For creation of total_op, see documentation of Hadamard::act
+    // op = X, and the total operation matrix is written as I x |0><0| + X x |1><1| 
+    // (in the case of consecutive qubits)
+
+    // In the general case, totalOp becomes:
+    // I x ... x I x |0><0| x ... x I x ... x I    +    I x ... x I x |1><1| x ... x X x ... x I 
+    //                 ^            ^                                   ^            ^
+    //              qControl     qTarget                             qControl     qTarget
     CMatrix op(this->operationMatrix);
     CMatrix id = identityMatrix(2);
 
-    std::vector<CMatrix*> ops;
-    for(int i=0;i<numQubits - this->qubits[1] - 1; i++){
-        ops.push_back(&id);
-    }
-    ops.push_back(&op);
-    for(int i=0;i<this->qubits[0];i++){
-        ops.push_back(&id);
-    }
+    std::vector<CMatrix*> ops0(numQubits, &id);
+    CMatrix ket0bra0({{1.f,0.f},{0.f,0.f}});
+    ops0[numQubits-1 - this->qubits[0]] = &ket0bra0;
 
-    CMatrix totalOp = kroneckerProduct(ops);
+    std::vector<CMatrix*> ops1(numQubits, &id);
+    CMatrix ket1bra1({{0.f,0.f},{0.f,1.f}});
+    ops1[numQubits-1 - this->qubits[0]] = &ket1bra1;
+
+    ops1[numQubits-1 - this->qubits[1]] = &op;
+
+    auto opCombined0 = kroneckerProduct(ops0);
+    auto opCombined1 = kroneckerProduct(ops1);
+
+    CMatrix totalOp = opCombined0 + opCombined1;
     statevector = matmul(totalOp, statevector);
 }
 
