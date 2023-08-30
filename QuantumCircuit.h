@@ -110,7 +110,7 @@ class QuantumCircuit{
         * @brief Returns how many times each configuration was measured
         * @returns a map from bitmask of a configuration to the number of its counts
         */
-        std::map<long long int, int> getCounts() {return this->counts;};
+        std::map<std::string, int> getCounts() {return this->counts;};
 
     private:
         const int numQubits;
@@ -130,5 +130,5 @@ class QuantumCircuit{
         int idCounter;
 
         // Maps a long long bitmask to its number of counts after run()
-        std::map<long long int, int> counts;
+        std::map<std::string, int> counts;
 };

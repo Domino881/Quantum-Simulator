@@ -217,15 +217,14 @@ void QuantumCircuit::run(int shots){
         }
 
         //add counts of current c-register state ('bitmask') to counts
-        long long int bitmask = 0;
-
-        for(unsigned i=0;i<this->classicalRegister.size();i++){
-            bitmask ^= (1<<i)*this->classicalRegister[i];
+        std::string bitmask(this->classicalRegister.size(), '0');
+        for(unsigned j = 0;j < this->classicalRegister.size();j++){
+            bitmask[j] = (char)(this->classicalRegister[j] + '0');
         }
 
-        if(!this->counts.count(bitmask))
-            this->counts[bitmask]=1;
-        else
-            this->counts[bitmask]++;
+        if(!counts.count(bitmask))
+            counts[bitmask] = 1;
+        else   
+            counts[bitmask]++;
     }
 }
