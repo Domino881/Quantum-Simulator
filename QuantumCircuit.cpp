@@ -54,6 +54,14 @@ void QuantumCircuit::cx(int qControl, int qTarget){
     this->operations.push_back(cx);
 }
 
+void QuantumCircuit::x(int q){
+    assert(q<this->numQubits);
+
+    std::shared_ptr<Operation> x = std::make_shared<Not>(q);
+    x->id = this->idCounter++;
+    this->operations.push_back(x);
+}
+
 void QuantumCircuit::debug_print() const{
     const static int bs_size = 2;
     printf("\n%-13s", "q register: ");
@@ -115,24 +123,23 @@ void QuantumCircuit::draw(){
         auto op = this->sortedDag[i];
         auto copyQubits = op->qubits;
 
-        if(op->name == "h"){
-            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[','H',']','-','-'});
+        if(copyQubits.size() == 1){
+            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[',(char)(op->name[0] - 32),']','-','-'});
         }
-        if(op->name == "cx"){
-            int maxSize = std::max(blocks[2*copyQubits[0]].size(), blocks[2*copyQubits[1]].size());
+        else{
+            if(op->name == "cx"){
+                int maxSize = std::max(blocks[2*copyQubits[0]].size(), blocks[2*copyQubits[1]].size());
 
-            while((int)blocks[2*copyQubits[0]].size() < maxSize)
-                blocks[2*copyQubits[0]].push_back('-');
-            while((int)blocks[2*copyQubits[1]].size() < maxSize)
-                blocks[2*copyQubits[1]].push_back('-');
+                while((int)blocks[2*copyQubits[0]].size() < maxSize)
+                    blocks[2*copyQubits[0]].push_back('-');
+                while((int)blocks[2*copyQubits[1]].size() < maxSize)
+                    blocks[2*copyQubits[1]].push_back('-');
 
-            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'-','*','-','-','-'});
-            blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'(','+',')','-','-'});
+                blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'-','*','-','-','-'});
+                blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'(','+',')','-','-'});
 
-            blocks[copyQubits[0]+copyQubits[1]][1+maxSize] = '|';
-        }
-        if(op->name == "m"){
-            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[','M',']','-','-'});
+                blocks[copyQubits[0]+copyQubits[1]][1+maxSize] = '|';
+            }
         }
     }
     unsigned maxSize = 0;

@@ -64,7 +64,18 @@ class QuantumCircuit{
         */
         void measure(int q, int c);
 
+        /*
+        * @brief Adds a controlled-NOT gate to the circuit
+        * @param qControl control qubit
+        * @param qTarget target qubit
+        */
         void cx(int qControl, int qTarget);
+
+        /*
+        * @brief Adds a NOT gate to the circuit
+        * @param q target qubit
+        */
+        void x(int q);
 
         void swap(int q1, int q2);
 

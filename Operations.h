@@ -41,3 +41,13 @@ class CNot : public Operation{
     private:
         const static std::vector<std::vector<std::complex<double> > > operationMatrix;
 };
+
+class Not : public Operation{
+    public:
+        Not(int q);
+
+        void act(std::vector<std::complex<double> >& statevector) override;
+
+    private:
+        const static std::vector<std::vector<std::complex<double> > > operationMatrix;
+};

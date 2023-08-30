@@ -12,12 +12,10 @@ int main(){
     const int numCbits = 2;
 
     QuantumCircuit qc(numQubits, numCbits);
-    qc.h(0);
-    qc.cx(0,1);
+    qc.x(0);
     qc.measure(0,0);
-    qc.measure(1,1);
 
-    qc.run(1000);
+    qc.run(5000);
     qc.draw();
     auto results = qc.getCounts();
     for(auto x : results){

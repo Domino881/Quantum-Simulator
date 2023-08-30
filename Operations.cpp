@@ -63,7 +63,7 @@ void Measure::act(std::vector<std::complex<double> >& statevector){
     }
     double r = (double)std::rand() / RAND_MAX;
     // printf("probability: %.2f, r: %.2f\n", probability[1], r);
-    bool result = r < probability[1];
+    bool result = r <= probability[1];
 
     for(unsigned i=0; i<statevector.size(); i++){
         // States corresponding to the qubit's state opposite to measured have 0 probability.
@@ -108,5 +108,38 @@ void CNot::act(std::vector<std::complex<double> >& statevector){
     }
 
     CMatrix totalOp = kroneckerProduct(ops);
+    statevector = matmul(totalOp, statevector);
+}
+
+
+const std::vector<std::vector<std::complex<double> > > Not::operationMatrix = {
+                                                                            {0, 1},
+                                                                            {1, 0}
+                                                                            };
+Not::Not(int q){
+    this->qubits = {q};
+    this->name="x";
+    this->cbits = {};
+}
+
+void Not::act(std::vector<std::complex<double> >& statevector){
+    // For documentation, see Hadamard::act()
+
+    int numQubits = std::log2(statevector.size());
+
+    CMatrix op(this->operationMatrix);
+    CMatrix id = identityMatrix(2);
+
+    std::vector<CMatrix*> ops;
+    for(int i=0;i<numQubits - this->qubits[0] - 1; i++){
+        ops.push_back(&id);
+    }
+    ops.push_back(&op);
+    for(int i=0;i<this->qubits[0];i++){
+        ops.push_back(&id);
+    }
+
+    CMatrix totalOp = kroneckerProduct(ops);
+
     statevector = matmul(totalOp, statevector);
 }
