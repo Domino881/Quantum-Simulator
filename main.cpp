@@ -8,16 +8,17 @@ using namespace std::complex_literals;
 
 int main(){
 
-    QuantumCircuit qc(3, 3);
+    QuantumCircuit qc(2, 2);
     qc.x(0);
-    qc.cx(0,2);
+    qc.h(1);
+    qc.cPhase(3, 0,1);
+    qc.h(1);
     qc.measure(0,0);
     qc.measure(1,1);
-    qc.measure(2,2);
 
-    qc.run();
+    qc.run(5000);
     qc.draw();
-    qc.debug_print();
+
     auto results = qc.getCounts();
     for(auto x : results){
         printf("%s: %d\n", x.first.c_str(), x.second);

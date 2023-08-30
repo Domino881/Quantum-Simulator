@@ -43,10 +43,11 @@ class Measure : public Operation{
         void act(std::vector<std::complex<double> >& statevector) override;
 };
 
-class CNot : public Operation{
+class ControlledGate : public Operation{
     public:
-        CNot(int qControl, int qTarget);
-        ~CNot() {};
+        ControlledGate(const std::string& label, const int& qControl, const int& qTarget,
+                       const std::vector<std::vector<std::complex<double> > > operationMatrix);
+        ~ControlledGate() {};
 
         /*
         * @brief Acts with the controlled-NOT operation on the given statevector
@@ -54,5 +55,5 @@ class CNot : public Operation{
         void act(std::vector<std::complex<double> >& statevector) override;
 
     private:
-        const static std::vector<std::vector<std::complex<double> > > operationMatrix;
+        const std::vector<std::vector<std::complex<double> > > operationMatrix;
 };

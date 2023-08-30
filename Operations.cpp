@@ -70,21 +70,17 @@ void Measure::act(VCD& statevector){
     *this->cbits[0] = (int)result;
 }
 
+ControlledGate::ControlledGate(const std::string& label, const int& qControl, const int& qTarget,
+                               const std::vector<std::vector<std::complex<double> > > operationMatrix):
+                               Operation(label, {qControl, qTarget}, {}), operationMatrix(operationMatrix){ }
 
-
-const std::vector<VCD> CNot::operationMatrix = {
-                                                {0.f, 1.f},
-                                                {1.f, 0.f}
-                                                };
-CNot::CNot(int qControl, int qTarget): Operation("cx", {qControl, qTarget}, {}){ }
-
-void CNot::act(VCD& statevector){
+void ControlledGate::act(VCD& statevector){
     /*
-    * op = X, and the total operation matrix is written as I x |0><0| + X x |1><1| 
+    * The total operation matrix is written as I x |0><0| + op x |1><1| 
     * (in the case of consecutive qubits)
     *
     * In the general case, totalOp becomes:
-    * I x ... x I x |0><0| x ... x I x ... x I    +    I x ... x I x |1><1| x ... x X x ... x I 
+    * I x ... x I x |0><0| x ... x I x ... x I    +    I x ... x I x |1><1| x ... x op x ... x I 
     *                 ^            ^                                   ^            ^
     *              qControl     qTarget                             qControl     qTarget
     */

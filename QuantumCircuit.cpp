@@ -40,8 +40,8 @@ void QuantumCircuit::h(int q){
 void QuantumCircuit::x(int q){
     assert(q<this->numQubits);
 
-    const std::vector<VCD > xMatrix = {{0, 1},
-                                       {1, 0}};
+    const std::vector<VCD > xMatrix = {{0.f, 1.f},
+                                       {1.f, 0.f}};
     std::shared_ptr<Operation> x = std::make_shared<singleQubitGate>("x", q, xMatrix);
     x->id = this->idCounter++;
     this->operations.push_back(x);
@@ -50,9 +50,22 @@ void QuantumCircuit::x(int q){
 void QuantumCircuit::cx(int qControl, int qTarget){
     assert(qControl<this->numQubits && qTarget<this->numQubits);
 
-    std::shared_ptr<Operation> cx = std::make_shared<CNot>(qControl, qTarget);
+    const std::vector<VCD> cxMatrix = {{0.f, 1.f},
+                                       {1.f, 0.f}};
+    std::shared_ptr<Operation> cx = std::make_shared<ControlledGate>("cx", qControl, qTarget, cxMatrix);
     cx->id = this->idCounter++;
     this->operations.push_back(cx);
+}
+
+void QuantumCircuit::cPhase(double lambda, int qControl, int qTarget){
+    assert(qControl<this->numQubits && qTarget<this->numQubits);
+
+    using namespace std::complex_literals;
+    const std::vector<VCD> cpMatrix = {{1.f, 0.f},
+                                       {0.f, std::exp(1i * lambda)}};
+    std::shared_ptr<Operation> cp = std::make_shared<ControlledGate>("cp", qControl, qTarget, cpMatrix);
+    cp->id = this->idCounter++;
+    this->operations.push_back(cp);
 }
 
 void QuantumCircuit::measure(int q, int c){
@@ -126,11 +139,13 @@ void QuantumCircuit::draw(){
         auto op = this->sortedDag[i];
         auto copyQubits = op->qubits;
 
+        //single-qubit gates
         if(copyQubits.size() == 1){
             blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[',(char)(op->label[0] - 32),']','-','-'});
         }
         else{
-            if(op->label == "cx"){
+            //controlled gates
+            if(op->label[0] == 'c'){
                 int maxSize = std::max(blocks[2*copyQubits[0]].size(), blocks[2*copyQubits[1]].size());
 
                 while((int)blocks[2*copyQubits[0]].size() < maxSize)
@@ -145,7 +160,11 @@ void QuantumCircuit::draw(){
                     blocks[minQ+j][1+maxSize] = '|';
                 
                 blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'-','*','-','-','-'});
-                blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'(','+',')','-','-'});
+
+                if(op->label == "cx")
+                    blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'(','+',')','-','-'});
+                if(op->label == "cp")
+                    blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'[','P',']','-','-'});
             }
         }
     }
@@ -217,9 +236,10 @@ void QuantumCircuit::run(int shots){
         }
 
         //add counts of current c-register state ('bitmask') to counts
-        std::string bitmask(this->classicalRegister.size(), '0');
-        for(unsigned j = 0;j < this->classicalRegister.size();j++){
-            bitmask[j] = (char)(this->classicalRegister[j] + '0');
+        unsigned numCbits = this->classicalRegister.size();
+        std::string bitmask(numCbits, '0');
+        for(unsigned j = 0;j < numCbits;j++){
+            bitmask[numCbits-1 - j] = (char)(this->classicalRegister[j] + '0');
         }
 
         if(!counts.count(bitmask))

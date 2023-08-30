@@ -61,11 +61,10 @@ class QuantumCircuit{
         void h(int q);
 
         /*
-        * @brief Adds a measurement to the circuit
-        * @param q qubit to be measured
-        * @param c classical bit to store the result
+        * @brief Adds a NOT gate to the circuit
+        * @param q target qubit
         */
-        void measure(int q, int c);
+        void x(int q);
 
         /*
         * @brief Adds a controlled-NOT gate to the circuit
@@ -75,28 +74,39 @@ class QuantumCircuit{
         void cx(int qControl, int qTarget);
 
         /*
-        * @brief Adds a NOT gate to the circuit
-        * @param q target qubit
+        * @brief Introduces a phase on the target qubit, controlled by the control qubit
+        * @param lambda phase to be introduced
+        * @param qControl control qubit
+        * @param qTarget target qubit
         */
-        void x(int q);
+        void cPhase(double lambda, int qControl, int qTarget);
+
+        /*
+        * @brief Adds a measurement to the circuit
+        * @param q qubit to be measured
+        * @param c classical bit to store the result
+        */
+        void measure(int q, int c);
 
         void swap(int q1, int q2);
 
         /*
-        * brief Prints out all internal variables
+        * @brief Prints out all internal variables
         */
         void debug_print() const;
+
+        /*
+        * @brief Draws the circuit in a nice format
+        */
         void draw();
 
         /*
         * @brief Resets the total statevector to the initial ket zero
-        *
         */
         void reset();
 
         /*
         * @brief Constructs a directed acyclic graph of operations, based on their order
-        *
         */
         void constructDag();
 
