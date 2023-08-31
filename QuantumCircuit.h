@@ -30,7 +30,7 @@ class Operation{
         * Virtual - to be overriden in every derived object 
         * (like singleQubitGate::act)
         */
-        virtual void act(std::vector<std::complex<double> >& statevector) = 0;
+        virtual void act(std::vector<std::complex<double> >& statevector) {};
 
         std::string label;
         // The qubits affected by / needed for the operation
@@ -87,7 +87,13 @@ class QuantumCircuit{
         */
         void cPhase(double lambda, int qControl, int qTarget);
 
+        /*
+        * @brief Swaps the states of two qubits
+        * @param q1,q2 qubits to be swapped
+        */
         void swap(int q1, int q2);
+
+        void barrier();
 
         /*
         * @brief Adds a measurement to the circuit

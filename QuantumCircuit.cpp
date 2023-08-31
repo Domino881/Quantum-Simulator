@@ -9,6 +9,7 @@
 #include<string>
 #include<bitset>
 #include<ctime>
+#include<algorithm>
 #include<random>
 
 using VCD = std::vector<std::complex<double> >; 
@@ -91,6 +92,17 @@ void QuantumCircuit::swap(int q1, int q2){
     this->operations.push_back(swp);
 }
 
+void QuantumCircuit::barrier(){
+    std::vector<int> qubits(this->numQubits, 0);
+    for(int i=0;i<this->numQubits;i++)qubits[i]=i;
+
+    std::vector<int*> clbits{};
+
+    std::shared_ptr<Operation> b = std::make_shared<Operation>("barrier", qubits, clbits);
+    b->id = this->idCounter++;
+    this->operations.push_back(b);
+}
+
 void QuantumCircuit::measure(int q, int c){
     assert(q<this->numQubits);
     assert(c<(int)this->classicalRegister.size());
@@ -160,47 +172,72 @@ void QuantumCircuit::draw(){
     }
     for (unsigned i = 0;i < this->sortedDag.size();i++) {
         auto& op = this->sortedDag[i];
-        auto& copyQubits = op->qubits;
+        auto copyQubits = this->sortedDag[i]->qubits;
+        std::sort(copyQubits.begin(), copyQubits.end());
 
         //single-qubit gates
         if (copyQubits.size() == 1) {
             for (char c : {'[', (char)(op->label[0] - 32), ']', '-', '-'}) {
                 blocks[2 * copyQubits[0]][++blockSizes[2 * copyQubits[0]]] = c;
             }
+            continue;
         }
-        //controlled gates
-        else if (op->label[0] == 'c') {
-            int minQ = 2 * std::min(copyQubits[0], copyQubits[1]);
-            int diffQ = 2 * std::abs(copyQubits[0] - copyQubits[1]);
-            unsigned maxSize = 0;
-            for (int j = 0; j < diffQ; j++) {
-                maxSize = std::max(maxSize, blockSizes[j]);
-            }
-            for (int j = 0; j <= diffQ; j++) {
-                if (j % 2 == 0) {
-                    while (blockSizes[minQ + j] < maxSize) {
-                        if (blocks[minQ + j][++blockSizes[minQ + j]] == ' ')
-                            blocks[minQ + j][blockSizes[minQ + j]] = '-';
-                    }
-                }
-                blocks[minQ + j][2 + maxSize] = '|';
-            }
 
+        int minQ = 2*copyQubits[0];
+        int diffQ = 2*(copyQubits[copyQubits.size() - 1]) - minQ;
+        unsigned maxSize = 0;
+        for (int j = 0; j <= diffQ; j++) {
+            maxSize = std::max(maxSize, blockSizes[minQ + j]);
+        }
+        for (int j = 0; j <= diffQ; j++) {
+            if (j % 2 == 0) {
+                while (blockSizes[minQ + j] < maxSize) {
+                    if (blocks[minQ + j][++blockSizes[minQ + j]] == ' ')
+                        blocks[minQ + j][blockSizes[minQ + j]] = '-';
+                }
+            }
+            else{
+                blockSizes[minQ + j] = 5+maxSize;
+            }
+            blocks[minQ + j][2 + maxSize] = '|';
+        }
+
+        //controlled gates
+        if (op->label[0] == 'c') {
             for (char c : {'-', '*', '-', '-', '-'}) {
-                blocks[2 * copyQubits[0]][++blockSizes[2 * copyQubits[0]]] = c;
+                blocks[2 * op->qubits[0]][++blockSizes[2 * op->qubits[0]]] = c;
             }
 
             if (op->label == "cx") {
                 for (char c : { '(', '+', ')', '-', '-' }) {
-                    blocks[2 * copyQubits[1]][++blockSizes[2 * copyQubits[1]]] = c;
+                    blocks[2 * op->qubits[1]][++blockSizes[2 * op->qubits[1]]] = c;
                 }
             }
             else {
                 for (char c : {'[', (char)(op->label[1] - 32), ']', '-', '-'}) {
-                    blocks[2 * copyQubits[1]][++blockSizes[2 * copyQubits[1]]] = c;
+                    blocks[2 * op->qubits[1]][++blockSizes[2 * op->qubits[1]]] = c;
                 }
             }
         }
+        else if (op->label == "swap") {
+            for (char c : {'-', 'x', '-', '-', '-'}) {
+                blocks[2 * op->qubits[0]][++blockSizes[2 * op->qubits[0]]] = c;
+                blocks[2 * op->qubits[1]][++blockSizes[2 * op->qubits[1]]] = c;
+            }
+        }
+        else if (op->label == "barrier") {
+            for (int j = 0; j < 2 * this->numQubits - 1; j++) {
+                if (j % 2 == 0) {
+                    for (char c : {'-', 'I', '-', '-', '-'}) {
+                        blocks[j][++blockSizes[j]] = c;
+                    }
+                }
+                else {
+                    blocks[j][maxSize + 2] = 'I';
+                }
+            }
+        }
+
     }
     unsigned maxSize = 0;
     for (int j = 0; j < this->numQubits; j++) {
@@ -269,6 +306,7 @@ void QuantumCircuit::run(int shots){
         this->reset();
 
         for(auto op : this->sortedDag){
+            if(op->label == "barrier")continue;
             op->act(this->totalStatevector);
         }
 
