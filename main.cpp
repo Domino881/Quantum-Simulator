@@ -8,15 +8,14 @@ using namespace std::complex_literals;
 
 int main(){
 
-    QuantumCircuit qc(3, 3);
-    qc.measure(1,1);
-    qc.h(1);
+    QuantumCircuit qc(2, 2);
     qc.h(0);
-    qc.cx(0,2);
-    qc.cPhase(0.5, 1,0);
+    // qc.swap(0,1);
+    qc.measure(0,0);
+    qc.measure(1,1);
 
-    qc.run();
-    qc.draw();
+    qc.run(10);
+    // qc.draw();
 
     auto results = qc.getCounts();
     for(auto x : results){

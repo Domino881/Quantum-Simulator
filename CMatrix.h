@@ -18,7 +18,9 @@ class CMatrix{
         * @brief Default constructor, as required by std::map
         * @warning undefined behaviour
         */
-        CMatrix() {};
+        CMatrix(): matrix({}) {};
+
+        ~CMatrix() {};
 
         /*
         * @brief Constructs a complex square matrix, filled with zeros
@@ -81,7 +83,12 @@ class CMatrix{
         */
         CMatrix pow(int p) const;
 
+        /*
+        * @brief Scalar multiplicatoin (on the left)
+        */
+        friend CMatrix operator*(const std::complex<double>& a, CMatrix b);
 };
+
 
 /*
 * @brief Returns a diagonal CMatrix object

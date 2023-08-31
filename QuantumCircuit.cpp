@@ -12,11 +12,16 @@
 #include<random>
 
 using VCD = std::vector<std::complex<double> >; 
+using namespace std::complex_literals;
 
 std::map<std::string, const CMatrix> QuantumCircuit::opMatrices = {
-    {"hadamard", CMatrix({{std::sqrt(0.5), std::sqrt(0.5)}, {std::sqrt(0.5), -std::sqrt(0.5)}})},
+    {"H", CMatrix({{std::sqrt(0.5), std::sqrt(0.5)}, {std::sqrt(0.5), -std::sqrt(0.5)}})},
 
-    {"NOT", CMatrix({{std::sqrt(0.f), std::sqrt(1.f)}, {std::sqrt(1.f), -std::sqrt(0.f)}})}
+    {"X", CMatrix({{std::sqrt(0.f), std::sqrt(1.f)}, {std::sqrt(1.f), -std::sqrt(0.f)}})},
+
+    {"Y", CMatrix({{0.f, -1i}, {1i, 0.f}})},
+
+    {"Z", CMatrix({{1.f, 0.f},{0.f, -1.f}})}
 };
 
 Operation::Operation(const std::string& label, const std::vector<int>& qubits, const std::vector<int*>& cbits): 
@@ -37,7 +42,7 @@ QuantumCircuit::QuantumCircuit(int numQubits, int num_cbits): numQubits(numQubit
 void QuantumCircuit::h(int q){
     assert(q<this->numQubits);
 
-    std::shared_ptr<Operation> h = std::make_shared<singleQubitGate>("h", q, this->opMatrices["hadamard"]);
+    std::shared_ptr<Operation> h = std::make_shared<singleQubitGate>("h", q, this->opMatrices["H"]);
 
     h->id = this->idCounter++;
     this->operations.push_back(h);
@@ -45,7 +50,7 @@ void QuantumCircuit::h(int q){
 void QuantumCircuit::x(int q){
     assert(q<this->numQubits);
 
-    std::shared_ptr<Operation> x = std::make_shared<singleQubitGate>("x", q, this->opMatrices["NOT"]);
+    std::shared_ptr<Operation> x = std::make_shared<singleQubitGate>("x", q, this->opMatrices["X"]);
     x->id = this->idCounter++;
     this->operations.push_back(x);
 }
@@ -53,7 +58,7 @@ void QuantumCircuit::x(int q){
 void QuantumCircuit::cx(int qControl, int qTarget){
     assert(qControl<this->numQubits && qTarget<this->numQubits);
 
-    std::shared_ptr<Operation> cx = std::make_shared<ControlledGate>("cx", qControl, qTarget, this->opMatrices["NOT"]);
+    std::shared_ptr<Operation> cx = std::make_shared<ControlledGate>("cx", qControl, qTarget, this->opMatrices["X"]);
     cx->id = this->idCounter++;
     this->operations.push_back(cx);
 }
@@ -61,7 +66,6 @@ void QuantumCircuit::cx(int qControl, int qTarget){
 void QuantumCircuit::phase(double lambda, int q){
     assert(q<this->numQubits);
 
-    using namespace std::complex_literals;
     const CMatrix pMatrix({{1.f, 0.f},
                            {0.f, std::exp(1i * lambda)}});
     std::shared_ptr<Operation> p = std::make_shared<singleQubitGate>("p", q, pMatrix);
@@ -72,7 +76,6 @@ void QuantumCircuit::phase(double lambda, int q){
 void QuantumCircuit::cPhase(double lambda, int qControl, int qTarget){
     assert(qControl<this->numQubits && qTarget<this->numQubits);
 
-    using namespace std::complex_literals;
     const CMatrix cpMatrix({{1.f, 0.f},
                             {0.f, std::exp(1i * lambda)}});
     std::shared_ptr<Operation> cp = std::make_shared<ControlledGate>("cp", qControl, qTarget, cpMatrix);
@@ -81,7 +84,11 @@ void QuantumCircuit::cPhase(double lambda, int qControl, int qTarget){
 }
 
 void QuantumCircuit::swap(int q1, int q2){
+    assert(q1<this->numQubits && q2<this->numQubits);
 
+    std::shared_ptr<Operation> swp = std::make_shared<SwapGate>("swap", q1, q2);
+    swp->id = this->idCounter++;
+    this->operations.push_back(swp);
 }
 
 void QuantumCircuit::measure(int q, int c){
@@ -188,8 +195,8 @@ void QuantumCircuit::draw(){
                     blocks[2 * copyQubits[1]][++blockSizes[2 * copyQubits[1]]] = c;
                 }
             }
-            if (op->label == "cp") {
-                for (char c : {'[', 'P', ']', '-', '-'}) {
+            else {
+                for (char c : {'[', (char)(op->label[1] - 32), ']', '-', '-'}) {
                     blocks[2 * copyQubits[1]][++blockSizes[2 * copyQubits[1]]] = c;
                 }
             }

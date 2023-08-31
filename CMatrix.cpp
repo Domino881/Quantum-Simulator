@@ -164,6 +164,15 @@ CMatrix CMatrix::pow(int p) const{
     return res;
 }
 
+CMatrix operator*(const std::complex<double>& a, CMatrix b){
+    for(unsigned i=0;i<b.dim();i++){
+        for(unsigned j=0; j<b.dim(); j++){
+            b(i,j) = b(i,j) * a;
+        }
+    }
+    return b;
+}
+
 CMatrix kroneckerProduct(const CMatrix& a, const CMatrix& b){
     CMatrix res(a.dim() * b.dim());
 

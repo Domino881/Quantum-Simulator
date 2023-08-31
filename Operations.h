@@ -33,17 +33,6 @@ class singleQubitGate : public Operation{
         const CMatrix operationMatrix;
 };
 
-class Measure : public Operation{
-    public:
-        Measure(int q, int* c);
-        ~Measure() {};
-
-        /*
-        * @brief Measures the given qubits to the classical register
-        */
-        void act(std::vector<std::complex<double> >& statevector) override;
-};
-
 class ControlledGate : public Operation{
     public:
         ControlledGate(const std::string& label, const int& qControl, const int& qTarget,
@@ -57,4 +46,28 @@ class ControlledGate : public Operation{
 
     private:
         const CMatrix operationMatrix;
+};
+
+class SwapGate : public Operation{
+    public:
+        SwapGate(const std::string& label, const int& q1, const int& q2);
+        ~SwapGate() {};
+
+        /*
+        * @brief Swaps the states of two qubits
+        */
+        void act(std::vector<std::complex<double> >& statevector) override;
+    private:
+        const CMatrix operationMatrix;
+};
+
+class Measure : public Operation{
+    public:
+        Measure(int q, int* c);
+        ~Measure() {};
+
+        /*
+        * @brief Measures the given qubits to the classical register
+        */
+        void act(std::vector<std::complex<double> >& statevector) override;
 };
