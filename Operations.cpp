@@ -10,7 +10,7 @@
 using VCD = std::vector<std::complex<double> >; 
 
 singleQubitGate::singleQubitGate(const std::string& label, 
-                                 const int& q, const std::vector<VCD>& operationMatrix):
+                                 const int& q, const CMatrix& operationMatrix):
     Operation(label, {q}, {}),
     operationMatrix(operationMatrix){
     assert(qubits.size() == 1);
@@ -71,7 +71,7 @@ void Measure::act(VCD& statevector){
 }
 
 ControlledGate::ControlledGate(const std::string& label, const int& qControl, const int& qTarget,
-                               const std::vector<std::vector<std::complex<double> > > operationMatrix):
+                               const CMatrix& operationMatrix):
                                Operation(label, {qControl, qTarget}, {}), operationMatrix(operationMatrix){ }
 
 void ControlledGate::act(VCD& statevector){

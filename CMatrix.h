@@ -15,6 +15,12 @@ class CMatrix{
 
     public:
         /*
+        * @brief Default constructor, as required by std::map
+        * @warning undefined behaviour
+        */
+        CMatrix() {};
+
+        /*
         * @brief Constructs a complex square matrix, filled with zeros
         * @param dim dimension of the matrix
         * @returns A zero matrix of dimension dim
@@ -69,6 +75,11 @@ class CMatrix{
         * @param epsilon maximum allowed error from the identity
         */
         bool isUnitary(const double epsilon=1e-5) const;
+
+        /*
+        * @returns matrix raised to the power p
+        */
+        CMatrix pow(int p) const;
 
 };
 

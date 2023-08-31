@@ -1,6 +1,7 @@
 #include"QuantumCircuit.h"
 
 #include"Operations.h"
+#include"CMatrix.h"
 
 #include<cstdio>
 #include<cassert>
@@ -11,6 +12,12 @@
 #include<random>
 
 using VCD = std::vector<std::complex<double> >; 
+
+std::map<std::string, const CMatrix> QuantumCircuit::opMatrices = {
+    {"hadamard", CMatrix({{std::sqrt(0.5), std::sqrt(0.5)}, {std::sqrt(0.5), -std::sqrt(0.5)}})},
+
+    {"NOT", CMatrix({{std::sqrt(0.f), std::sqrt(1.f)}, {std::sqrt(1.f), -std::sqrt(0.f)}})}
+};
 
 Operation::Operation(const std::string& label, const std::vector<int>& qubits, const std::vector<int*>& cbits): 
     label(label), qubits(qubits), cbits(cbits), next({}), dependencies(0), id(-1) {}
@@ -30,9 +37,7 @@ QuantumCircuit::QuantumCircuit(int numQubits, int num_cbits): numQubits(numQubit
 void QuantumCircuit::h(int q){
     assert(q<this->numQubits);
 
-    const std::vector<VCD> hMatrix = {{std::sqrt(0.5), std::sqrt(0.5)},
-                                      {std::sqrt(0.5), -std::sqrt(0.5)}};
-    std::shared_ptr<Operation> h = std::make_shared<singleQubitGate>("h", q, hMatrix);
+    std::shared_ptr<Operation> h = std::make_shared<singleQubitGate>("h", q, this->opMatrices["hadamard"]);
 
     h->id = this->idCounter++;
     this->operations.push_back(h);
@@ -40,9 +45,7 @@ void QuantumCircuit::h(int q){
 void QuantumCircuit::x(int q){
     assert(q<this->numQubits);
 
-    const std::vector<VCD > xMatrix = {{0.f, 1.f},
-                                       {1.f, 0.f}};
-    std::shared_ptr<Operation> x = std::make_shared<singleQubitGate>("x", q, xMatrix);
+    std::shared_ptr<Operation> x = std::make_shared<singleQubitGate>("x", q, this->opMatrices["NOT"]);
     x->id = this->idCounter++;
     this->operations.push_back(x);
 }
@@ -50,22 +53,35 @@ void QuantumCircuit::x(int q){
 void QuantumCircuit::cx(int qControl, int qTarget){
     assert(qControl<this->numQubits && qTarget<this->numQubits);
 
-    const std::vector<VCD> cxMatrix = {{0.f, 1.f},
-                                       {1.f, 0.f}};
-    std::shared_ptr<Operation> cx = std::make_shared<ControlledGate>("cx", qControl, qTarget, cxMatrix);
+    std::shared_ptr<Operation> cx = std::make_shared<ControlledGate>("cx", qControl, qTarget, this->opMatrices["NOT"]);
     cx->id = this->idCounter++;
     this->operations.push_back(cx);
+}
+
+void QuantumCircuit::phase(double lambda, int q){
+    assert(q<this->numQubits);
+
+    using namespace std::complex_literals;
+    const CMatrix pMatrix({{1.f, 0.f},
+                           {0.f, std::exp(1i * lambda)}});
+    std::shared_ptr<Operation> p = std::make_shared<singleQubitGate>("p", q, pMatrix);
+    p->id = this->idCounter++;
+    this->operations.push_back(p);
 }
 
 void QuantumCircuit::cPhase(double lambda, int qControl, int qTarget){
     assert(qControl<this->numQubits && qTarget<this->numQubits);
 
     using namespace std::complex_literals;
-    const std::vector<VCD> cpMatrix = {{1.f, 0.f},
-                                       {0.f, std::exp(1i * lambda)}};
+    const CMatrix cpMatrix({{1.f, 0.f},
+                            {0.f, std::exp(1i * lambda)}});
     std::shared_ptr<Operation> cp = std::make_shared<ControlledGate>("cp", qControl, qTarget, cpMatrix);
     cp->id = this->idCounter++;
     this->operations.push_back(cp);
+}
+
+void QuantumCircuit::swap(int q1, int q2){
+
 }
 
 void QuantumCircuit::measure(int q, int c){
@@ -120,61 +136,75 @@ void QuantumCircuit::debug_print() const{
     }
     printf("\n");
 }
+
 void QuantumCircuit::draw(){
-    if(this->sortedDag.size() < this->operations.size())
+    if (this->sortedDag.size() < this->operations.size())
         this->constructDag();
 
-    std::vector<std::vector<char> > blocks{};
-    for(int i=0;i<this->numQubits;i++){
-        std::vector<char> v(2, '-');
+    std::vector<std::vector<char> > blocks;
+    std::vector<unsigned> blockSizes(2 * this->numQubits, 1);
+
+    for (int i = 0;i < this->numQubits;i++) {
+        std::vector<char> v(this->operations.size() * 5 + 4, ' ');
+        v[0] = '-'; v[1] = '-';
         blocks.push_back(v);
         std::vector<char> w(this->operations.size() * 5 + 4, ' ');
         blocks.push_back(w);
     }
-
-    auto copysortedDag = this->sortedDag;
-    assert(this->sortedDag.size() == this->operations.size());
-
-    for(unsigned i=0;i<this->sortedDag.size();i++){
-        auto op = this->sortedDag[i];
-        auto copyQubits = op->qubits;
+    for (unsigned i = 0;i < this->sortedDag.size();i++) {
+        auto& op = this->sortedDag[i];
+        auto& copyQubits = op->qubits;
 
         //single-qubit gates
-        if(copyQubits.size() == 1){
-            blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'[',(char)(op->label[0] - 32),']','-','-'});
+        if (copyQubits.size() == 1) {
+            for (char c : {'[', (char)(op->label[0] - 32), ']', '-', '-'}) {
+                blocks[2 * copyQubits[0]][++blockSizes[2 * copyQubits[0]]] = c;
+            }
         }
-        else{
-            //controlled gates
-            if(op->label[0] == 'c'){
-                int maxSize = std::max(blocks[2*copyQubits[0]].size(), blocks[2*copyQubits[1]].size());
+        //controlled gates
+        else if (op->label[0] == 'c') {
+            int minQ = 2 * std::min(copyQubits[0], copyQubits[1]);
+            int diffQ = 2 * std::abs(copyQubits[0] - copyQubits[1]);
+            unsigned maxSize = 0;
+            for (int j = 0; j < diffQ; j++) {
+                maxSize = std::max(maxSize, blockSizes[j]);
+            }
+            for (int j = 0; j <= diffQ; j++) {
+                if (j % 2 == 0) {
+                    while (blockSizes[minQ + j] < maxSize) {
+                        if (blocks[minQ + j][++blockSizes[minQ + j]] == ' ')
+                            blocks[minQ + j][blockSizes[minQ + j]] = '-';
+                    }
+                }
+                blocks[minQ + j][2 + maxSize] = '|';
+            }
 
-                while((int)blocks[2*copyQubits[0]].size() < maxSize)
-                    blocks[2*copyQubits[0]].push_back('-');
+            for (char c : {'-', '*', '-', '-', '-'}) {
+                blocks[2 * copyQubits[0]][++blockSizes[2 * copyQubits[0]]] = c;
+            }
 
-                while((int)blocks[2*copyQubits[1]].size() < maxSize)
-                    blocks[2*copyQubits[1]].push_back('-');
-
-                int minQ = 2*std::min(copyQubits[0],copyQubits[1]);
-                int diffQ = 2*std::abs(copyQubits[0]-copyQubits[1]);
-                for(int j=1; j<diffQ; j+=2)
-                    blocks[minQ+j][1+maxSize] = '|';
-                
-                blocks[2*copyQubits[0]].insert(blocks[2*copyQubits[0]].end(), {'-','*','-','-','-'});
-
-                if(op->label == "cx")
-                    blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'(','+',')','-','-'});
-                if(op->label == "cp")
-                    blocks[2*copyQubits[1]].insert(blocks[2*copyQubits[1]].end(), {'[','P',']','-','-'});
+            if (op->label == "cx") {
+                for (char c : { '(', '+', ')', '-', '-' }) {
+                    blocks[2 * copyQubits[1]][++blockSizes[2 * copyQubits[1]]] = c;
+                }
+            }
+            if (op->label == "cp") {
+                for (char c : {'[', 'P', ']', '-', '-'}) {
+                    blocks[2 * copyQubits[1]][++blockSizes[2 * copyQubits[1]]] = c;
+                }
             }
         }
     }
     unsigned maxSize = 0;
-    for(int i=0;i<this->numQubits;i++)
-        maxSize = blocks[2*i].size()>maxSize? blocks[i].size():maxSize;
+    for (int j = 0; j < this->numQubits; j++) {
+        maxSize = std::max(blockSizes[2*j], maxSize);
+    }
 
-    for(int i=0; i<this->numQubits; i++){
-        while(blocks[2*i].size() < maxSize)
-            blocks[2*i].push_back('-');
+    for (int j=0;j<this->numQubits; j++){
+        while(blockSizes[2*j] < maxSize){
+            if(blocks[2*j][++blockSizes[2*j]] == ' ')
+                blocks[2 * j][blockSizes[2 * j]] = '-';
+        }
     }
 
     printf("\n");

@@ -13,6 +13,8 @@
 #include<complex>
 #include<map>
 
+#include"CMatrix.h"
+
 class Operation{
     public:
         /*
@@ -54,6 +56,8 @@ class QuantumCircuit{
         */
         QuantumCircuit(int numQubits, int numCbits);
 
+        static std::map<std::string, const CMatrix> opMatrices;
+
         /*
         * @brief Adds a hadamard gate to the circuit
         * @param q target qubit for the gate
@@ -73,6 +77,8 @@ class QuantumCircuit{
         */
         void cx(int qControl, int qTarget);
 
+        void phase(double lambda, int q);
+
         /*
         * @brief Introduces a phase on the target qubit, controlled by the control qubit
         * @param lambda phase to be introduced
@@ -81,14 +87,14 @@ class QuantumCircuit{
         */
         void cPhase(double lambda, int qControl, int qTarget);
 
+        void swap(int q1, int q2);
+
         /*
         * @brief Adds a measurement to the circuit
         * @param q qubit to be measured
         * @param c classical bit to store the result
         */
         void measure(int q, int c);
-
-        void swap(int q1, int q2);
 
         /*
         * @brief Prints out all internal variables

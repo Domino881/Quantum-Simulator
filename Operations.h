@@ -10,6 +10,7 @@
 #include<complex>
 
 #include"QuantumCircuit.h"
+#include"CMatrix.h"
 
 class singleQubitGate : public Operation{
     public:
@@ -19,7 +20,7 @@ class singleQubitGate : public Operation{
         * @param q qubit on which the gate is to act
         */
         singleQubitGate(const std::string& label, const int& q,
-                        const std::vector<std::vector<std::complex<double> > >& operationMatrix);
+                        const CMatrix& operationMatrix);
 
         ~singleQubitGate() {};
 
@@ -29,7 +30,7 @@ class singleQubitGate : public Operation{
         void act(std::vector<std::complex<double> >& statevector) override;
 
     private:
-        const std::vector<std::vector<std::complex<double> > > operationMatrix;
+        const CMatrix operationMatrix;
 };
 
 class Measure : public Operation{
@@ -46,7 +47,7 @@ class Measure : public Operation{
 class ControlledGate : public Operation{
     public:
         ControlledGate(const std::string& label, const int& qControl, const int& qTarget,
-                       const std::vector<std::vector<std::complex<double> > > operationMatrix);
+                       const CMatrix& operationMatrix);
         ~ControlledGate() {};
 
         /*
@@ -55,5 +56,5 @@ class ControlledGate : public Operation{
         void act(std::vector<std::complex<double> >& statevector) override;
 
     private:
-        const std::vector<std::vector<std::complex<double> > > operationMatrix;
+        const CMatrix operationMatrix;
 };

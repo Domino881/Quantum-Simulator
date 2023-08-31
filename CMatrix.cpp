@@ -146,6 +146,24 @@ bool CMatrix::isUnitary(const double epsilon) const{
     return true;
 }
 
+CMatrix CMatrix::pow(int p) const{
+    assert(p>0);
+
+    CMatrix res = *this;
+    p--;
+    while(p){
+        if(p%2 == 0){
+            res = matmul(res, res);
+            p /= 2;
+        }
+        else{
+            res = matmul(res, *this);
+            p--;
+        }
+    }
+    return res;
+}
+
 CMatrix kroneckerProduct(const CMatrix& a, const CMatrix& b){
     CMatrix res(a.dim() * b.dim());
 
