@@ -30,7 +30,7 @@ class Operation{
         * Virtual - to be overriden in every derived object 
         * (like singleQubitGate::act)
         */
-        virtual void act(std::vector<std::complex<double> >& statevector) {};
+        virtual CMatrix act(std::vector<std::complex<double> >& statevector) { return CMatrix({}); };
 
         std::string label;
         // The qubits affected by / needed for the operation
@@ -153,4 +153,7 @@ class QuantumCircuit{
 
         // Maps a long long bitmask to its number of counts after run()
         std::map<std::string, int> counts;
+
+        // Stores the resulting total operator matrix from operation with given id
+        std::vector<CMatrix> totalOpCache;
 };

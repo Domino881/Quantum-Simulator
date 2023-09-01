@@ -26,11 +26,15 @@ class singleQubitGate : public Operation{
 
         /*
         * @brief Applies the operation matrix to the given statevector
+        * @returns The total operation matrix (to be cached)
         */
-        void act(std::vector<std::complex<double> >& statevector) override;
+        CMatrix act(std::vector<std::complex<double> >& statevector) override;
 
     private:
         const CMatrix operationMatrix;
+
+        // Cache total ops ?? 
+        static std::map<std::string, CMatrix> cachedTotalOps;
 };
 
 class ControlledGate : public Operation{
@@ -41,8 +45,9 @@ class ControlledGate : public Operation{
 
         /*
         * @brief Acts with the controlled-NOT operation on the given statevector
+        * @returns The total operation matrix (to be cached)
         */
-        void act(std::vector<std::complex<double> >& statevector) override;
+        CMatrix act(std::vector<std::complex<double> >& statevector) override;
 
     private:
         const CMatrix operationMatrix;
@@ -55,8 +60,9 @@ class SwapGate : public Operation{
 
         /*
         * @brief Swaps the states of two qubits
+        * @returns The total operation matrix (to be cached)
         */
-        void act(std::vector<std::complex<double> >& statevector) override;
+        CMatrix act(std::vector<std::complex<double> >& statevector) override;
     private:
         const CMatrix operationMatrix;
 };
@@ -68,6 +74,7 @@ class Measure : public Operation{
 
         /*
         * @brief Measures the given qubits to the classical register
+        * @returns A CMatrix with dimension 0
         */
-        void act(std::vector<std::complex<double> >& statevector) override;
+        CMatrix act(std::vector<std::complex<double> >& statevector) override;
 };

@@ -114,12 +114,15 @@ void QuantumCircuit::measure(int q, int c){
 
 
 void QuantumCircuit::debug_print() const{
-    const static int bs_size = 2;
-    printf("\n%-13s", "q register: ");
+    const static int bs_size = 5;
+    printf("\n%s", "q register:\n");
     for(int b=0;b<(1<<this->numQubits); b++){
-        // assuming max 4 qubits!!
         std::bitset<bs_size> bs(b);
-        printf("[%s]: %.2f  ", bs.to_string().c_str(), pow(abs(this->totalStatevector[b]),2));
+        printf("%.5s", bs.to_string().c_str());
+    }
+    printf("\n");
+    for(int b=0;b<(1<<this->numQubits); b++){
+        printf("|%3.0f|", 100.0*pow(abs(this->totalStatevector[b]),2));
     }
     printf("\n%-13s", "c register: ");
     for(auto x : this->classicalRegister)printf("%d  ", x);
@@ -191,13 +194,10 @@ void QuantumCircuit::draw(){
         }
         for (int j = 0; j <= diffQ; j++) {
             if (j % 2 == 0) {
-                while (blockSizes[minQ + j] < maxSize) {
+                while (blockSizes[minQ + j] < maxSize + ((j==0||j==diffQ)?0:5)) {
                     if (blocks[minQ + j][++blockSizes[minQ + j]] == ' ')
                         blocks[minQ + j][blockSizes[minQ + j]] = '-';
                 }
-            }
-            else{
-                blockSizes[minQ + j] = 5+maxSize;
             }
             blocks[minQ + j][2 + maxSize] = '|';
         }
@@ -227,14 +227,12 @@ void QuantumCircuit::draw(){
         }
         else if (op->label == "barrier") {
             for (int j = 0; j < 2 * this->numQubits - 1; j++) {
-                if (j % 2 == 0) {
+                if (j==0 || j==2*this->numQubits-2) {
                     for (char c : {'-', 'I', '-', '-', '-'}) {
                         blocks[j][++blockSizes[j]] = c;
                     }
                 }
-                else {
-                    blocks[j][maxSize + 2] = 'I';
-                }
+                blocks[j][maxSize + 2] = 'I';
             }
         }
 
@@ -245,10 +243,10 @@ void QuantumCircuit::draw(){
     }
 
     for (int j=0;j<this->numQubits; j++){
-        while(blockSizes[2*j] < maxSize){
-            if(blocks[2*j][++blockSizes[2*j]] == ' ')
-                blocks[2 * j][blockSizes[2 * j]] = '-';
-        }
+        blocks[2*j].resize(blockSizes[2*j]+1);
+        blocks[2*j].resize(maxSize, '-');
+
+        blocks[2*j+1].resize(maxSize);
     }
 
     printf("\n");
@@ -301,13 +299,25 @@ void QuantumCircuit::run(int shots){
     if(this->sortedDag.size() < this->operations.size())
         this->constructDag();
 
+    this->totalOpCache.resize(idCounter);
+
     for(int shot=0;shot<shots;shot++){
         // Zero out the statevector
         this->reset();
 
         for(auto op : this->sortedDag){
             if(op->label == "barrier")continue;
-            op->act(this->totalStatevector);
+
+            // dim==0 equivalent to this being not set or op being a measurement,
+            // in that case execute the operation through act()
+            if (totalOpCache[op->id].dim() == 0) {
+                CMatrix cachedOp = op->act(this->totalStatevector);
+                totalOpCache[op->id] = cachedOp;
+            }
+            // if resulting total operator has already been cached, reuse it
+            else{
+                this->totalStatevector = matmul(totalOpCache[op->id], this->totalStatevector);
+            }
         }
 
         //add counts of current c-register state ('bitmask') to counts

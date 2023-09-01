@@ -16,7 +16,7 @@ singleQubitGate::singleQubitGate(const std::string& label,
     assert(qubits.size() == 1);
 }
 
-void singleQubitGate::act(VCD& statevector){
+CMatrix singleQubitGate::act(VCD& statevector){
 
     int numQubits = std::log2(statevector.size());
 
@@ -38,13 +38,14 @@ void singleQubitGate::act(VCD& statevector){
     CMatrix totalOp = kroneckerProduct(ops);
 
     statevector = matmul(totalOp, statevector);
+    return totalOp;
 }
 
 
 
 Measure::Measure(int q, int* c): Operation("m", {q}, {c}){}
 
-void Measure::act(VCD& statevector){
+CMatrix Measure::act(VCD& statevector){
     int q = this->qubits[0];
     double probability[2] = {0.f,0.f};
 
@@ -62,19 +63,20 @@ void Measure::act(VCD& statevector){
 
     for(unsigned i=0; i<statevector.size(); i++){
         // States corresponding to the qubit's state opposite to measured have 0 probability.
-        if( (bs&i) != result ){statevector[i]=0; continue;}
+        if( ((bs&i)>0) != result ){statevector[i]=0; continue;}
 
         // Remaining states become normalized.
         statevector[i] /= std::sqrt(probability[result]);
     }
     *this->cbits[0] = (int)result;
+    return CMatrix(0);
 }
 
 ControlledGate::ControlledGate(const std::string& label, const int& qControl, const int& qTarget,
                                const CMatrix& operationMatrix):
                                Operation(label, {qControl, qTarget}, {}), operationMatrix(operationMatrix){ }
 
-void ControlledGate::act(VCD& statevector){
+CMatrix ControlledGate::act(VCD& statevector){
     /*
     * The total operation matrix is written as I x |0><0| + op x |1><1| 
     * (in the case of consecutive qubits)
@@ -102,12 +104,13 @@ void ControlledGate::act(VCD& statevector){
 
     CMatrix totalOp = kroneckerProduct(ops0) + kroneckerProduct(ops1);
     statevector = matmul(totalOp, statevector);
+    return totalOp;
 }
 
 SwapGate::SwapGate(const std::string& label, const int& q1, const int& q2):
     Operation(label, { q1, q2 }, {}) { }
 
-void SwapGate::act(VCD& statevector){
+CMatrix SwapGate::act(VCD& statevector){
     /*
     * The SWAP matrix on consecutive qubits is represented as:
     *
@@ -122,33 +125,29 @@ void SwapGate::act(VCD& statevector){
 
     using namespace std::complex_literals;
 
-    CMatrix* id = new CMatrix(identityMatrix(2));
-    CMatrix* x = new CMatrix({{std::sqrt(0.f), std::sqrt(1.f)}, {std::sqrt(1.f), -std::sqrt(0.f)}});
-    CMatrix* y = new CMatrix({{0.f, -1i}, {1i, 0.f}});
-    CMatrix* z = new CMatrix({{1.f, 0.f},{0.f, -1.f}});
+    CMatrix id(identityMatrix(2));
+    CMatrix x({{std::sqrt(0.f), std::sqrt(1.f)}, {std::sqrt(1.f), -std::sqrt(0.f)}});
+    CMatrix y({{0.f, -1i}, {1i, 0.f}});
+    CMatrix z({{1.f, 0.f},{0.f, -1.f}});
 
     int q1 = this->qubits[0];
     int q2 = this->qubits[1];
 
-    std::vector<CMatrix*> opsi(numQubits, id);
+    std::vector<CMatrix*> opsi(numQubits, &id);
 
-    std::vector<CMatrix*> opsx(numQubits, id);
-    opsx[numQubits-1 - q1] = x;
-    opsx[numQubits-1 - q2] = x;
+    std::vector<CMatrix*> opsx(numQubits, &id);
+    opsx[numQubits-1 - q1] = &x;
+    opsx[numQubits-1 - q2] = &x;
 
-    std::vector<CMatrix*> opsy(numQubits, id);
-    opsy[numQubits-1 - q1] = y;
-    opsy[numQubits-1 - q2] = y;
+    std::vector<CMatrix*> opsy(numQubits, &id);
+    opsy[numQubits-1 - q1] = &y;
+    opsy[numQubits-1 - q2] = &y;
 
-    std::vector<CMatrix*> opsz(numQubits, id);
-    opsz[numQubits-1 - q1] = z;
-    opsz[numQubits-1 - q2] = z;
+    std::vector<CMatrix*> opsz(numQubits, &id);
+    opsz[numQubits-1 - q1] = &z;
+    opsz[numQubits-1 - q2] = &z;
 
     CMatrix totalOp = 0.5 * (kroneckerProduct(opsi) + kroneckerProduct(opsx) + kroneckerProduct(opsy) + kroneckerProduct(opsz));
-
-    delete id;
-    delete x;
-    delete y; 
-    delete z;
     statevector = matmul(totalOp, statevector);
+    return totalOp;
 }
